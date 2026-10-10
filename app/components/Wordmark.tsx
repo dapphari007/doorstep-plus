@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 function GradientPlus() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="-mt-0.5 ml-1 h-[0.62em] w-[0.62em]">
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="-ml-px mt-[0.02em] h-[0.6em] w-[0.6em]">
       <defs>
         <linearGradient id="plus-gradient" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#0ea5e9" />
@@ -20,7 +20,7 @@ export function Wordmark({ className = '' }: { className?: string }) {
     <Link
       href="/"
       aria-label="Doorstep+, home"
-      className={`inline-flex items-start whitespace-nowrap text-[22px] font-semibold tracking-tight text-ink sm:text-2xl ${className}`}
+      className={`inline-flex items-start whitespace-nowrap text-[22px] font-semibold tracking-tight text-primary sm:text-2xl ${className}`}
     >
       Doorstep
       <GradientPlus />
