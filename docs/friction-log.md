@@ -62,7 +62,7 @@ Entries marked *(to verify)* were found in docs or code and still need confirmin
 - **Workaround:** Request full resolution, and tell the vision model to ignore the overlay.
 - **Suggestion:** Return a watermark bounding box in the response headers so apps can mask it.
 
-## 9. Playground simulations create events but no downloadable media — 🔴
+## 9. First Package simulation had no downloadable media — 🟠
 
 - **Task:** Describe a Playground "Package" simulation from its snapshot, which is how a real device event would be handled.
 - **Steps:**
@@ -70,13 +70,13 @@ Entries marked *(to verify)* were found in docs or code and still need confirmin
   2. Event History showed a new `on_demand` event.
   3. Called `POST /media/image/download` with `latest_in_range` over the event's start/end, retrying for ~2 minutes as the docs suggest.
 - **Expected:** A snapshot from the simulated clip, as with a real recording.
-- **Actual:** Every attempt returned `416 MEDIA_NOT_FOUND`. The event exists, but no image or clip can be fetched, so no snapshot or clip feature can be tested in the sandbox.
+- **Actual:** Every attempt returned `416 MEDIA_NOT_FOUND` for ~2 minutes. Later Package events failed with entry 9b instead, while Motion and Vehicle events returned snapshots, so the Package clip specifically can't be tested through the snapshot path.
 - **Workaround:** Capture frames from the live WHEP stream in the browser and describe those ("Describe what's happening" / auto-describe).
 - **Suggestion:** Have the Playground store the simulated clip as a recording, so image/video download returns real media for simulated events.
 
 ## 9b. Undocumented `422 GRECO_NO_VALID_KEY` on a Playground event — 🟠
 
-- **Actual:** For one Playground `on_demand` event, image download answered `422 GRECO_NO_VALID_KEY: No valid Greco key available for decryption`. This code is not in the documented error table (which lists 422 only as `CORRUPT_RECORDING`), and the device reports no end-to-end encryption.
+- **Actual:** Snapshot downloads for **Package** simulation events always answered `422 GRECO_NO_VALID_KEY: No valid Greco key available for decryption` (6 of 6 events). The same call worked for **Motion** and **Vehicle** simulation events (4 of 4), which returned real snapshots. This code is not in the documented error table (which lists 422 only as `CORRUPT_RECORDING`), and the device reports no end-to-end encryption.
 - **Workaround:** Treat it as "no media" and fall back to live-view frames.
 - **Suggestion:** Document this code, say whether it is retryable, and explain what a developer can do about it.
 

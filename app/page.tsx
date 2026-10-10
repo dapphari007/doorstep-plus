@@ -14,9 +14,9 @@ export default function DoorstepPage() {
   const [checking, setChecking] = useState(false)
 
   const latest = useMemo(() => events.find((e) => e.status === 'described' && !e.repeatOf), [events])
-  // Hide live-view sessions with no recording and repeated frames.
+  // Hide live-view sessions Ring couldn't give us media for, and repeated frames.
   const recent = events
-    .filter((e) => !(e.ringType === 'on_demand' && e.status === 'no_media') && !e.repeatOf)
+    .filter((e) => !(e.ringType === 'on_demand' && (e.status === 'no_media' || e.status === 'error')) && !e.repeatOf)
     .slice(0, 30)
   const pattern = PATTERNS[alertKindFor(latest?.perception)]
 
