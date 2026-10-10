@@ -1,8 +1,8 @@
 {
-  "name": "doorstep-copilot",
+  "name": "doorstep-plus",
   "version": "0.1.0",
   "private": true,
-  "description": "An accessible, privacy-first AI copilot for Ring doorbells, built on the Ring Partner API and Amazon Bedrock.",
+  "description": "An accessible, privacy-first AI layer for Ring doorbells, built on the Ring Partner API and Amazon Bedrock.",
   "license": "MIT",
   "scripts": {
     "dev": "next dev -p 3000",

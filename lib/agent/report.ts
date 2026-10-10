@@ -7,7 +7,7 @@ export function buildIncidentReport(title: string, summary: string, events: Door
   const lines = [
     `# ${title}`,
     '',
-    `Generated ${fmt(Date.now())} by Doorstep Copilot from Ring doorbell events.`,
+    `Generated ${fmt(Date.now())} by Doorstep+ from Ring doorbell events.`,
     '',
     '## Summary',
     '',

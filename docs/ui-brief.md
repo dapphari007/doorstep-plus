@@ -1,4 +1,4 @@
-# Doorstep Copilot — UI brief
+# Doorstep+ — UI brief
 
 Use this to design a new UI. The backend (`lib/`, `app/api/`) stays as is; the UI only talks to the HTTP endpoints below.
 

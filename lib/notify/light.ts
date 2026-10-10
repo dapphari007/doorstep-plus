@@ -13,7 +13,7 @@ export async function notifyLight(event: DoorEvent): Promise<void> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        source: 'doorstep-copilot',
+        source: 'doorstep-plus',
         kind: pattern.kind,
         color: pattern.color,
         rhythm_ms: pattern.rhythm,

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Creates the DynamoDB table and private S3 bucket used by Doorstep Copilot.
+# Creates the DynamoDB table and private S3 bucket used by Doorstep+.
 # Usage: ./scripts/setup-aws.sh [region]   (needs `aws login` or credentials)
 set -euo pipefail
 

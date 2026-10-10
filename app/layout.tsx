@@ -6,7 +6,7 @@ import { AppShell } from './components/AppShell'
 import { AppProvider } from './providers/AppProvider'
 
 export const metadata: Metadata = {
-  title: 'Doorstep',
+  title: 'Doorstep+',
   description: 'Know what is happening at your front door, in the way that works for you.',
 }
 

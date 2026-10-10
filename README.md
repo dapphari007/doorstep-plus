@@ -1,8 +1,8 @@
-# Doorstep Copilot
+# Doorstep+
 
 **Your Ring doorbell, understood — by everyone in the house.**
 
-Doorstep Copilot is an AI layer on top of the [Ring Partner API](https://developer.amazon.com/docs/ring/api-documentation.html). It describes what is happening at the front door (never *who*), alerts each resident in the way that works for them, remembers everything so you can just ask, and handles package deliveries on its own.
+Doorstep+ is an AI layer on top of the [Ring Partner API](https://developer.amazon.com/docs/ring/api-documentation.html). It describes what is happening at the front door (never *who*), alerts each resident in the way that works for them, remembers everything so you can just ask, and handles package deliveries on its own.
 
 Built for the Amazon Developer Hackathon 2026 — **Ring track** (accessibility, access control, IoT home automation) and the **AWS Builder** mini challenge.
 
@@ -111,6 +111,13 @@ npm run typecheck
 - Descriptions are AI-generated and can be wrong; low-confidence scenes get general wording instead of guesses.
 - Devices with end-to-end encryption are not visible to partner APIs.
 - This is a single-user demo app with no login; don't expose it to the internet as-is.
+
+## Open source contribution
+
+While building this we found and fixed two auth bugs in Amazon's official sample, [AmazonAppDev/ring-api-helloworld](https://github.com/AmazonAppDev/ring-api-helloworld): [pull request #29](https://github.com/AmazonAppDev/ring-api-helloworld/pull/29) (by [@dapphari007](https://github.com/dapphari007)).
+
+- **What:** removed a route that returned the live Ring access token to any caller, and made refresh-token mode keep the rotated refresh token.
+- **Why it matters:** every developer who starts from the sample inherits both problems. The token leak is a security issue, and the refresh bug breaks long-running integrations about 4 hours after start, because Ring invalidates the old refresh token on each refresh.
 
 ## Built on
 

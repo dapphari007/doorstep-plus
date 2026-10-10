@@ -2,7 +2,7 @@ import type { Perception } from './perception/schema'
 
 export type EventSource = 'history' | 'webhook' | 'live_frame' | 'fixture'
 
-/** A Ring event after Doorstep Copilot has looked at it. */
+/** A Ring event after Doorstep+ has looked at it. */
 export interface DoorEvent {
   /** Ring's event id, or a generated id for live-frame captures. */
   id: string
