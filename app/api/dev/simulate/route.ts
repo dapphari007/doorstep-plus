@@ -7,7 +7,8 @@ import { processRingEvent } from '@/lib/pipeline'
 export async function POST(req: NextRequest) {
   if (!config.fixtures) return NextResponse.json({ error: 'Only available with FIXTURE_MODE=true' }, { status: 404 })
   const { scene } = await req.json()
-  if (!FIXTURE_SCENES.includes(scene)) return NextResponse.json({ error: `scene must be one of ${FIXTURE_SCENES}` }, { status: 400 })
+  if (!FIXTURE_SCENES.includes(scene))
+    return NextResponse.json({ error: `scene must be one of ${FIXTURE_SCENES}` }, { status: 400 })
   const now = Date.now()
   const event = await processRingEvent({
     id: `fixture_${scene}_${now}`,

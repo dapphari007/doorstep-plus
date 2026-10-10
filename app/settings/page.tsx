@@ -1,163 +1,258 @@
 'use client'
 
-import { useState } from 'react'
-import { PROFILES, useApp, type AlertPrefs, type ProfileId } from '../components/ProfileProvider'
-import { useStatus } from '../hooks/useStatus'
+import { useState, type FormEvent, type ReactNode } from 'react'
+import { StatusDot } from '../components/ui/Badge'
+import { Button } from '../components/ui/Button'
+import { Card, Container, PageHeader, SectionTitle } from '../components/ui/Card'
+import { InlineMessage } from '../components/ui/EmptyState'
+import { Icon } from '../components/ui/Icon'
+import { Switch } from '../components/ui/Switch'
+import { useApp } from '../providers/AppProvider'
+import { clockTime, errorMessage, postJson } from '../utils/format'
+import { PROFILES, type AlertPrefs, type ProfileId } from '../utils/profiles'
+import { chime, speak, vibrate } from '../utils/sound'
 
-function Check({ ok, label, detail }: { ok: boolean; label: string; detail?: string }) {
+const PLAYGROUND_URL = 'https://developer.amazon.com/ring/console/playground'
+
+function CheckRow({ ok, label, detail }: { ok: boolean; label: string; detail: ReactNode }) {
   return (
-    <li className="flex gap-3">
-      <span aria-hidden="true" className={ok ? 'text-emerald-400' : 'text-amber-400'}>
-        {ok ? '✔' : '●'}
+    <li className="flex items-start gap-3 py-3">
+      <span className="mt-2">
+        <StatusDot tone={ok ? 'success' : 'warning'} />
       </span>
-      <span>
-        <span className="font-semibold text-white">{label}</span>
-        {detail && <span className="block text-sm text-slate-400">{detail}</span>}
-      </span>
+      <div className="min-w-0">
+        <p className="font-medium">
+          {label} <span className="sr-only">{ok ? '(ok)' : '(needs attention)'}</span>
+        </p>
+        <p className="break-words text-sm text-muted">{detail}</p>
+      </div>
     </li>
   )
 }
 
-export default function SettingsPage() {
-  const { profile, setProfile, prefs, setPrefs } = useApp()
-  const { status, reload } = useStatus(4000)
+function ConnectRing({ onConnected }: { onConnected: () => void }) {
   const [token, setToken] = useState('')
-  const [msg, setMsg] = useState<string>()
+  const [visible, setVisible] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string }>()
 
-  const saveToken = async () => {
-    setMsg(undefined)
-    const res = await fetch('/api/ring/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-    })
-    const body = await res.json()
-    setMsg(res.ok ? 'Connected. Watching for new Ring events.' : body.error)
-    if (res.ok) setToken('')
-    void reload()
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    const value = token.trim()
+    if (value.length < 20 || saving) return
+    setSaving(true)
+    setMessage(undefined)
+    try {
+      await postJson('/api/ring/token', { token: value })
+      setToken('')
+      setMessage({ tone: 'success', text: 'Connected. Watching your door for new events.' })
+      onConnected()
+    } catch (err) {
+      setMessage({ tone: 'danger', text: errorMessage(err, 'Could not connect') })
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const toggle = (k: keyof AlertPrefs) => setPrefs({ ...prefs, [k]: !prefs[k] })
-
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-3xl font-bold text-white">Settings</h1>
-
-      <section className="card space-y-4" aria-labelledby="ring-heading">
-        <h2 id="ring-heading" className="text-lg font-bold text-white">
-          Connect Ring
-        </h2>
-        <p className="text-slate-300">
-          Open the{' '}
-          <a className="font-semibold text-sky-300 underline" href="https://developer.amazon.com/ring/console/playground" target="_blank" rel="noreferrer">
-            Ring Developer Playground
-          </a>
-          , click <strong>Generate Token</strong>, and paste it here. Playground tokens last about 30 minutes. The token stays
-          in this server’s memory and is never sent back to the browser.
-        </p>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <label htmlFor="token" className="sr-only">
-            Ring access token
-          </label>
+    <form onSubmit={submit} className="space-y-3">
+      <p className="text-sm text-muted">
+        In the{' '}
+        <a
+          href={PLAYGROUND_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="font-medium text-primary underline-offset-2 hover:underline"
+        >
+          Ring Developer Playground
+        </a>
+        , choose <strong>Generate Token</strong> and paste it here. Tokens last about 30 minutes and are kept in server
+        memory only.
+      </p>
+      <div className="flex gap-2">
+        <label htmlFor="token" className="sr-only">
+          Ring access token
+        </label>
+        <div className="relative min-w-0 flex-1">
           <input
             id="token"
-            type="password"
+            type={visible ? 'text' : 'password'}
             value={token}
             onChange={(e) => setToken(e.target.value)}
-            placeholder="eyJ…"
-            className="min-w-0 flex-1 rounded-xl border border-ink-600 bg-ink-950 px-3 py-2 font-mono text-white"
+            placeholder="Paste token"
             autoComplete="off"
+            spellCheck={false}
+            className="h-11 w-full rounded-full border border-line bg-surface pl-4 pr-16 font-mono text-sm placeholder:font-sans placeholder:text-muted"
           />
-          <button className="btn-primary" onClick={saveToken} disabled={token.trim().length < 20}>
-            Connect
+          <button
+            type="button"
+            onClick={() => setVisible((v) => !v)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-xs font-semibold text-muted hover:bg-subtle"
+            aria-pressed={visible}
+          >
+            {visible ? 'Hide' : 'Show'}
           </button>
         </div>
-        {msg && <p role="status" className="text-slate-200">{msg}</p>}
-      </section>
+        <Button type="submit" loading={saving} disabled={token.trim().length < 20}>
+          Connect
+        </Button>
+      </div>
+      {message && <InlineMessage tone={message.tone}>{message.text}</InlineMessage>}
+    </form>
+  )
+}
 
-      <section className="card" aria-labelledby="status-heading">
-        <h2 id="status-heading" className="text-lg font-bold text-white">
-          System check
-        </h2>
-        {status ? (
-          <ul className="mt-3 space-y-3">
-            {status.fixtures && <Check ok={false} label="Fixture mode is ON" detail="Events are fake. Turn off FIXTURE_MODE for the real demo." />}
-            <Check
-              ok={status.ring.connected}
-              label="Ring Partner API"
-              detail={status.ring.connected ? `Connected (${status.ring.mode})${status.poller.deviceId ? ` · device ${status.poller.deviceId}` : ''}` : 'Not connected'}
-            />
-            <Check
-              ok={!!status.poller.lastSuccessAt && !status.poller.lastError}
-              label="Event history polling"
-              detail={status.poller.lastError ?? (status.poller.lastSuccessAt ? `Last checked ${new Date(status.poller.lastSuccessAt).toLocaleTimeString()}` : 'Waiting for Ring')}
-            />
-            <Check
-              ok={status.aws.credentials}
-              label="Amazon Bedrock"
-              detail={`${status.aws.credentials ? 'Credentials found' : 'No AWS credentials found'} · ${status.aws.region} · vision: ${status.aws.perceptionModel} · agent: ${status.aws.agentModel}`}
-            />
-            <Check ok={status.aws.store === 'aws'} label="Storage" detail={status.aws.store === 'aws' ? 'DynamoDB + S3' : 'Local files (.data/)'} />
-            <Check ok={status.lightWebhook} label="Smart-light webhook" detail={status.lightWebhook ? 'Configured' : 'Optional: set LIGHT_WEBHOOK_URL to flash a real lamp'} />
-          </ul>
-        ) : (
-          <p className="mt-3 text-slate-400">Loading…</p>
-        )}
-      </section>
+export default function SettingsPage() {
+  const { profile, setProfile, prefs, setPrefs, status, serverOffline: offline, reloadStatus: reload } = useApp()
 
-      <section className="card space-y-4" aria-labelledby="alerts-heading">
-        <h2 id="alerts-heading" className="text-lg font-bold text-white">
-          How you’re alerted
-        </h2>
-        <fieldset className="grid gap-2 sm:grid-cols-2">
-          <legend className="sr-only">Profile</legend>
-          {Object.entries(PROFILES).map(([id, p]) => (
-            <label
-              key={id}
-              className={`cursor-pointer rounded-xl border p-3 ${profile === id ? 'border-ring-blue bg-ring-blue/10' : 'border-ink-600'}`}
-            >
-              <input
-                type="radio"
-                name="profile"
-                className="sr-only"
-                checked={profile === id}
-                onChange={() => setProfile(id as ProfileId)}
+  const setPref = (key: keyof AlertPrefs, value: boolean) => setPrefs({ ...prefs, [key]: value })
+
+  const testAlert = () => {
+    if (prefs.chime) chime()
+    if (prefs.vibrate) vibrate([300, 150, 300])
+    if (prefs.speak) speak('This is a test alert from Doorstep.')
+  }
+
+  const lastCheck = status?.poller.lastSuccessAt
+    ? `Last checked ${clockTime(status.poller.lastSuccessAt)}`
+    : 'Waiting for Ring'
+
+  return (
+    <Container>
+      <div className="max-w-3xl space-y-6">
+        <PageHeader title="Settings" />
+
+        <Card className="p-5 sm:p-6" aria-labelledby="ring-heading">
+          <SectionTitle id="ring-heading">Ring account</SectionTitle>
+          <ConnectRing onConnected={() => void reload()} />
+        </Card>
+
+        <Card className="p-5 sm:p-6" aria-labelledby="alerts-heading">
+          <SectionTitle
+            id="alerts-heading"
+            action={
+              <Button size="sm" variant="secondary" onClick={testAlert}>
+                Test alert
+              </Button>
+            }
+          >
+            How you're alerted
+          </SectionTitle>
+          <fieldset>
+            <legend className="sr-only">Alert profile</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(Object.keys(PROFILES) as ProfileId[]).map((id) => (
+                <label
+                  key={id}
+                  className={`flex cursor-pointer gap-3 rounded-2xl border p-4 transition-colors ${
+                    profile === id ? 'border-primary bg-primary/5' : 'border-line hover:bg-subtle'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="profile"
+                    checked={profile === id}
+                    onChange={() => setProfile(id)}
+                    className="mt-1 h-4 w-4 accent-[rgb(var(--primary))]"
+                  />
+                  <span>
+                    <span className="block font-semibold">{PROFILES[id].label}</span>
+                    <span className="block text-sm text-muted">{PROFILES[id].blurb}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <div className="mt-4 divide-y divide-line border-t border-line">
+            <Switch
+              checked={prefs.flash}
+              onChange={(v) => setPref('flash', v)}
+              label="Screen flash"
+              description="The screen flashes in the alert's colour and rhythm."
+            />
+            <Switch
+              checked={prefs.vibrate}
+              onChange={(v) => setPref('vibrate', v)}
+              label="Vibration"
+              description="On phones that support it."
+            />
+            <Switch
+              checked={prefs.speak}
+              onChange={(v) => setPref('speak', v)}
+              label="Read aloud"
+              description="Each alert is spoken. Press R to repeat."
+            />
+            <Switch checked={prefs.chime} onChange={(v) => setPref('chime', v)} label="Chime" />
+          </div>
+          <p className="mt-2 text-xs text-muted">
+            Browsers only play sound after you've tapped or clicked the page once.
+          </p>
+        </Card>
+
+        <Card className="p-5 sm:p-6" aria-labelledby="status-heading">
+          <SectionTitle id="status-heading">System</SectionTitle>
+          {offline ? (
+            <InlineMessage tone="danger">Can't reach the Doorstep server.</InlineMessage>
+          ) : !status ? (
+            <p className="text-muted">Checking…</p>
+          ) : (
+            <ul className="divide-y divide-line">
+              {status.fixtures && (
+                <CheckRow
+                  ok={false}
+                  label="Test mode is on"
+                  detail="Events are fake. Turn off FIXTURE_MODE for real Ring data."
+                />
+              )}
+              <CheckRow
+                ok={status.ring.connected}
+                label="Ring"
+                detail={status.ring.connected ? 'Connected' : 'Not connected'}
               />
-              <span className="font-bold text-white">{p.label}</span>
-              <span className="block text-sm text-slate-300">{p.blurb}</span>
-            </label>
-          ))}
-        </fieldset>
-        <div className="flex flex-wrap gap-4">
-          {(
-            [
-              ['flash', 'Screen flash'],
-              ['vibrate', 'Vibration'],
-              ['speak', 'Speak aloud'],
-              ['chime', 'Chime'],
-            ] as [keyof AlertPrefs, string][]
-          ).map(([k, label]) => (
-            <label key={k} className="flex items-center gap-2 text-slate-200">
-              <input type="checkbox" className="h-5 w-5" checked={prefs[k]} onChange={() => toggle(k)} />
-              {label}
-            </label>
-          ))}
-        </div>
-        <p className="text-sm text-slate-400">
-          Browsers only allow sound and speech after you’ve clicked somewhere on the page once.
-        </p>
-      </section>
+              <CheckRow
+                ok={!!status.poller.lastSuccessAt && !status.poller.lastError}
+                label="Event checks"
+                detail={status.poller.lastError ?? lastCheck}
+              />
+              <CheckRow
+                ok={status.aws.credentials}
+                label="AI descriptions (Amazon Bedrock)"
+                detail={
+                  status.aws.credentials
+                    ? `${status.aws.perceptionModel} · ${status.aws.region}`
+                    : 'No AWS credentials found'
+                }
+              />
+              <CheckRow
+                ok={status.aws.store === 'aws'}
+                label="Storage"
+                detail={status.aws.store === 'aws' ? 'Amazon DynamoDB + S3' : 'This computer only'}
+              />
+              <CheckRow
+                ok={status.lightWebhook}
+                label="Smart light"
+                detail={status.lightWebhook ? 'Connected' : 'Optional: set LIGHT_WEBHOOK_URL'}
+              />
+            </ul>
+          )}
+        </Card>
 
-      <section className="card space-y-2" aria-labelledby="privacy-heading">
-        <h2 id="privacy-heading" className="text-lg font-bold text-white">
-          Privacy promise
-        </h2>
-        <ul className="list-disc space-y-1 pl-5 text-slate-300">
-          <li>Descriptions say what is happening, never who someone is. No face recognition, no licence plates.</li>
-          <li>A safety check edits every AI description before it’s shown or spoken, and tells you what it changed.</li>
-          <li>Only events after you connect are read, and only from devices you share in the Ring app.</li>
-        </ul>
-      </section>
-    </div>
+        <Card className="p-5 sm:p-6" aria-labelledby="privacy-heading">
+          <SectionTitle id="privacy-heading">Privacy</SectionTitle>
+          <ul className="space-y-3">
+            {[
+              'Describes what is happening, never who. No face recognition, no licence plates.',
+              'A safety check edits every AI description before you see or hear it.',
+              'Only reads events after you connect, from devices you share.',
+            ].map((text) => (
+              <li key={text} className="flex gap-3">
+                <Icon name="shield" className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <span>{text}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </div>
+    </Container>
   )
 }

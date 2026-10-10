@@ -1,189 +1,224 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import type { DeliveryRecord } from '@/lib/types'
-import { Thumb, timeLabel } from '../components/EventCard'
-import { useApp } from '../components/ProfileProvider'
+import { useState, type FormEvent } from 'react'
+import type { DeliveryRecord, LockState } from '@/lib/types'
+import { EventThumb } from '../components/EventThumb'
+import { Badge } from '../components/ui/Badge'
+import { Button } from '../components/ui/Button'
+import { Card, Container, PageHeader, SectionTitle } from '../components/ui/Card'
+import { EmptyState, InlineMessage } from '../components/ui/EmptyState'
+import { Icon } from '../components/ui/Icon'
+import { useNow } from '../hooks/useNow'
+import { useApp } from '../providers/AppProvider'
+import { clockTime, errorMessage, postJson, relativeTime, secondsLeft } from '../utils/format'
 
-const STATUS: Record<DeliveryRecord['status'], { label: string; cls: string; help: string }> = {
+const STATUS: Record<
+  DeliveryRecord['status'],
+  { label: string; tone: 'success' | 'warning' | 'danger'; help: string }
+> = {
   verified: {
-    label: 'Verified drop-off',
-    cls: 'bg-emerald-500/15 text-emerald-200',
-    help: 'A delivery person and a package were clearly visible, so the parcel box opened.',
+    label: 'Delivered',
+    tone: 'success',
+    help: 'A courier and a package were clearly seen, so the box opened.',
   },
   needs_review: {
-    label: 'Needs a look',
-    cls: 'bg-amber-500/15 text-amber-200',
-    help: 'A package appeared but the courier wasn’t clear enough to open the box automatically.',
+    label: 'At the door',
+    tone: 'warning',
+    help: 'A package was seen, but no courier clearly, so the box stayed locked.',
   },
-  taken: {
-    label: 'Picked up',
-    cls: 'bg-red-500/15 text-red-200',
-    help: 'Someone later picked the package up from the door.',
-  },
+  taken: { label: 'Picked up', tone: 'danger', help: 'Someone later picked the package up from the door.' },
 }
 
-function useNow(ms = 1000) {
-  const [now, setNow] = useState(Date.now())
-  useEffect(() => {
-    const tick = () => setNow(Date.now())
-    const id = setInterval(tick, ms)
-    // Background tabs throttle timers; catch up as soon as the tab is visible.
-    document.addEventListener('visibilitychange', tick)
-    return () => {
-      clearInterval(id)
-      document.removeEventListener('visibilitychange', tick)
+function ParcelBox({ lock, now }: { lock?: LockState; now: number }) {
+  const [code, setCode] = useState('')
+  const [pending, setPending] = useState<'unlock' | 'lock' | 'reset'>()
+  const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string }>()
+
+  const remaining = secondsLeft(lock?.unlockedUntil, now)
+  const open = !!lock && !lock.locked && remaining > 0
+  const activeCode = lock?.activeCode && lock.activeCode.expiresAt > now ? lock.activeCode : undefined
+
+  const act = async (action: 'unlock' | 'lock' | 'reset') => {
+    if (pending) return
+    if (action === 'reset' && !window.confirm('Reset the simulated parcel box? This clears its log.')) return
+    setPending(action)
+    setMessage(undefined)
+    try {
+      await postJson('/api/lock', { action, code })
+      setCode('')
+      setMessage({
+        tone: 'success',
+        text: { unlock: 'Box opened.', lock: 'Box locked.', reset: 'Simulator reset.' }[action],
+      })
+    } catch (err) {
+      setMessage({ tone: 'danger', text: errorMessage(err) })
+    } finally {
+      setPending(undefined)
     }
-  }, [ms])
-  return now
+  }
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    if (code.length === 6) void act('unlock')
+  }
+
+  return (
+    <Card className="p-5 sm:p-6" aria-labelledby="box-heading">
+      <SectionTitle
+        id="box-heading"
+        action={<Badge title="Ring's API can't control locks, so this box is simulated">Simulated</Badge>}
+      >
+        Parcel box
+      </SectionTitle>
+
+      <div role="status" className={`flex items-center gap-4 rounded-2xl p-4 ${open ? 'bg-success/10' : 'bg-subtle'}`}>
+        <span
+          className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${open ? 'bg-success text-white' : 'bg-surface text-muted'}`}
+        >
+          <Icon name={open ? 'unlock' : 'lock'} className="h-6 w-6" />
+        </span>
+        <div>
+          <p className="text-lg font-semibold">{open ? 'Open for delivery' : 'Locked'}</p>
+          <p className="text-sm text-muted">
+            {open
+              ? `Locks again in ${remaining}s`
+              : activeCode
+                ? `Code ready until ${clockTime(activeCode.expiresAt)}`
+                : 'Opens for verified couriers'}
+          </p>
+        </div>
+      </div>
+
+      {activeCode && (
+        <p className="mt-4 text-sm text-muted">
+          One-time code{' '}
+          <span className="ml-1 font-mono text-xl font-semibold tracking-[0.2em] text-ink">{activeCode.code}</span>
+        </p>
+      )}
+
+      <form onSubmit={submit} className="mt-4 flex gap-2">
+        <label htmlFor="code" className="sr-only">
+          One-time code
+        </label>
+        <input
+          id="code"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="\d{6}"
+          maxLength={6}
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          placeholder="6-digit code"
+          className="h-11 w-full min-w-0 rounded-full border border-line bg-surface px-4 font-mono tracking-widest placeholder:font-sans placeholder:tracking-normal placeholder:text-muted"
+        />
+        <Button type="submit" disabled={code.length !== 6} loading={pending === 'unlock'}>
+          Unlock
+        </Button>
+      </form>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant="secondary"
+          icon="lock"
+          onClick={() => void act('lock')}
+          loading={pending === 'lock'}
+          disabled={!open}
+        >
+          Lock now
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => void act('reset')} loading={pending === 'reset'}>
+          Reset simulator
+        </Button>
+      </div>
+      {message && (
+        <div className="mt-3">
+          <InlineMessage tone={message.tone}>{message.text}</InlineMessage>
+        </div>
+      )}
+
+      <details className="mt-5 border-t border-line pt-4">
+        <summary className="cursor-pointer text-sm font-semibold">Box log ({lock?.log.length ?? 0})</summary>
+        <ol className="mt-3 max-h-60 space-y-2 overflow-y-auto text-sm">
+          {(lock?.log ?? []).map((entry, i) => (
+            <li key={`${entry.at}-${i}`} className="flex gap-3">
+              <time className="w-20 shrink-0 text-muted">{clockTime(entry.at)}</time>
+              <span>{entry.detail}</span>
+            </li>
+          ))}
+          {!lock?.log.length && <li className="text-muted">Nothing yet.</li>}
+        </ol>
+      </details>
+    </Card>
+  )
 }
 
 export default function DeliveriesPage() {
-  const { deliveries, events, lock } = useApp()
+  const { deliveries, events, lock, loaded } = useApp()
   const now = useNow()
-  const [code, setCode] = useState('')
-  const [msg, setMsg] = useState<string>()
   const byId = new Map(events.map((e) => [e.id, e]))
 
-  const act = async (action: 'lock' | 'unlock' | 'reset') => {
-    setMsg(undefined)
-    const res = await fetch('/api/lock', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, code }),
-    })
-    const body = await res.json()
-    if (!res.ok) setMsg(body.error)
-    else setCode('')
-  }
-
-  const open = lock && !lock.locked && (lock.unlockedUntil ?? 0) > now
-  const secondsLeft = open ? Math.ceil(((lock!.unlockedUntil ?? now) - now) / 1000) : 0
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white">Deliveries</h1>
-        <p className="mt-1 max-w-3xl text-slate-300">
-          When Ring sees a courier drop off a package, Doorstep Copilot checks the footage, opens the parcel box for two
-          minutes with a one-time code, and keeps a timestamped proof-of-delivery record. If the package is later picked
-          up, you’re alerted.
-        </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
-        <section className="card space-y-4" aria-labelledby="lock-heading">
-          <div className="flex items-center justify-between gap-2">
-            <h2 id="lock-heading" className="text-lg font-bold text-white">
-              Parcel box
-            </h2>
-            <span className="pill bg-fuchsia-500/20 text-fuchsia-200" title="Ring’s API cannot control locks; this box is simulated">
-              Simulated lock
-            </span>
-          </div>
-          <div
-            className={`rounded-2xl p-5 text-center ${open ? 'bg-emerald-500/15' : 'bg-ink-800'}`}
-            role="status"
-            aria-live="polite"
-          >
-            <p className="text-5xl" aria-hidden="true">
-              {open ? '🔓' : '🔒'}
-            </p>
-            <p className="mt-2 text-2xl font-bold text-white">{open ? 'Open for delivery' : 'Locked'}</p>
-            {open && <p className="text-emerald-200">Re-locks automatically in {secondsLeft}s</p>}
-            {lock?.activeCode && lock.activeCode.expiresAt > now && (
-              <p className="mt-2 text-slate-300">
-                One-time code <span className="font-mono text-xl font-bold tracking-widest text-white">{lock.activeCode.code}</span>{' '}
-                · expires {timeLabel(lock.activeCode.expiresAt)}
-              </p>
+    <Container>
+      <PageHeader
+        title="Deliveries"
+        subtitle="Every package seen at your door, with a timestamped photo, and an alert if it's picked up."
+      />
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
+        <div className="min-w-0 lg:order-2">
+          <Card className="p-5 sm:p-6" aria-labelledby="pod-heading">
+            <SectionTitle id="pod-heading">Packages</SectionTitle>
+            {loaded && deliveries.length === 0 ? (
+              <EmptyState icon="box" title="No packages yet">
+                When a package shows up at your door, it appears here.
+              </EmptyState>
+            ) : (
+              <ul className="divide-y divide-line">
+                {deliveries.map((d) => {
+                  const drop = byId.get(d.eventId)
+                  const taken = d.takenEventId ? byId.get(d.takenEventId) : undefined
+                  const s = STATUS[d.status]
+                  return (
+                    <li key={d.id} className="py-4 first:pt-0 last:pb-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge tone={s.tone} title={s.help}>
+                          {s.label}
+                        </Badge>
+                        <span className="text-sm text-muted">{relativeTime(d.at, now)}</span>
+                        {d.carrierGuess && <span className="text-sm text-muted">· {d.carrierGuess}</span>}
+                      </div>
+                      <p className="mt-2 break-words">{d.summary}</p>
+                      {(drop || taken) && (
+                        <div className="mt-3 flex gap-3">
+                          {drop && (
+                            <figure className="w-36">
+                              <EventThumb event={drop} className="aspect-video w-full rounded-xl" />
+                              <figcaption className="mt-1 text-xs text-muted">
+                                Arrived {clockTime(drop.start)}
+                              </figcaption>
+                            </figure>
+                          )}
+                          {taken && (
+                            <figure className="w-36">
+                              <EventThumb event={taken} className="aspect-video w-full rounded-xl" />
+                              <figcaption className="mt-1 text-xs text-danger">
+                                Picked up {clockTime(taken.start)}
+                              </figcaption>
+                            </figure>
+                          )}
+                        </div>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
             )}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="sr-only" htmlFor="code">
-              One-time code
-            </label>
-            <input
-              id="code"
-              inputMode="numeric"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="Code"
-              className="w-28 rounded-xl border border-ink-600 bg-ink-950 px-3 py-2 font-mono text-white"
-            />
-            <button className="btn-ghost" onClick={() => act('unlock')} disabled={code.length !== 6}>
-              Unlock with code
-            </button>
-            <button className="btn-ghost" onClick={() => act('lock')}>
-              Lock now
-            </button>
-            <button className="btn-ghost text-sm" onClick={() => act('reset')}>
-              Reset simulator
-            </button>
-          </div>
-          {msg && (
-            <p role="alert" className="text-amber-300">
-              {msg}
-            </p>
-          )}
-          <div>
-            <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400">Box log</h3>
-            <ol className="mt-2 max-h-64 space-y-1.5 overflow-y-auto text-sm">
-              {(lock?.log ?? []).map((l, i) => (
-                <li key={i} className="flex gap-3">
-                  <time className="shrink-0 text-slate-500">{timeLabel(l.at)}</time>
-                  <span className="text-slate-200">{l.detail}</span>
-                </li>
-              ))}
-              {!lock?.log.length && <li className="text-slate-500">Nothing yet.</li>}
-            </ol>
-          </div>
-        </section>
-
-        <section aria-labelledby="pod-heading" className="space-y-3">
-          <h2 id="pod-heading" className="text-lg font-bold text-white">
-            Proof of delivery
-          </h2>
-          {deliveries.length === 0 && (
-            <p className="text-slate-400">
-              No deliveries yet. In the Ring Developer Playground, start the <strong>Package</strong> live-view simulation.
-            </p>
-          )}
-          <ol className="space-y-3">
-            {deliveries.map((d) => {
-              const drop = byId.get(d.eventId)
-              const taken = d.takenEventId ? byId.get(d.takenEventId) : undefined
-              const s = STATUS[d.status]
-              return (
-                <li key={d.id} className="card space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`pill ${s.cls}`} title={s.help}>
-                      {s.label}
-                    </span>
-                    <time className="text-sm text-slate-400">{timeLabel(d.at)}</time>
-                    {d.carrierGuess && <span className="pill bg-ink-700 text-slate-200">Looks like {d.carrierGuess}</span>}
-                  </div>
-                  <p className="text-white">{d.summary}</p>
-                  <div className="flex flex-wrap gap-3">
-                    {drop && (
-                      <figure className="space-y-1">
-                        <Thumb event={drop} className="h-28 w-48" />
-                        <figcaption className="text-xs text-slate-400">Drop-off · {timeLabel(drop.start)}</figcaption>
-                      </figure>
-                    )}
-                    {taken && (
-                      <figure className="space-y-1">
-                        <Thumb event={taken} className="h-28 w-48" />
-                        <figcaption className="text-xs text-red-300">Picked up · {timeLabel(taken.start)}</figcaption>
-                      </figure>
-                    )}
-                  </div>
-                  {d.code && <p className="text-sm text-slate-400">Box code issued: <span className="font-mono">{d.code}</span></p>}
-                </li>
-              )
-            })}
-          </ol>
-        </section>
+          </Card>
+        </div>
+        <div className="min-w-0 lg:order-1">
+          <ParcelBox lock={lock} now={now} />
+        </div>
       </div>
-    </div>
+    </Container>
   )
 }

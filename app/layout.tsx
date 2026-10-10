@@ -1,35 +1,41 @@
 import './globals.css'
-import type { Metadata } from 'next'
-import { Nav } from './components/Nav'
-import { ProfileProvider } from './components/ProfileProvider'
-import { AlertLayer } from './components/AlertLayer'
+import type { Metadata, Viewport } from 'next'
+import type { ReactNode } from 'react'
+import { AlertOverlay } from './components/AlertOverlay'
+import { AppShell } from './components/AppShell'
+import { AppProvider } from './providers/AppProvider'
 
 export const metadata: Metadata = {
-  title: 'Doorstep Copilot',
-  description: 'An accessible, privacy-first AI copilot for Ring doorbells.',
+  title: 'Doorstep',
+  description: 'Know what is happening at your front door, in the way that works for you.',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#181c21' },
+  ],
+}
+
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" data-profile="standard">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen font-sans antialiased">
-        <ProfileProvider>
-          <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 btn-primary">
-            Skip to content
-          </a>
-          <Nav />
-          <main id="main" className="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6">
-            {children}
-          </main>
-          <AlertLayer />
-        </ProfileProvider>
+      <body className="font-sans text-[16px] antialiased">
+        <AppProvider>
+          <AppShell>{children}</AppShell>
+          <AlertOverlay />
+        </AppProvider>
       </body>
     </html>
   )

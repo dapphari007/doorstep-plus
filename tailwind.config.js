@@ -1,15 +1,26 @@
 /** @type {import('tailwindcss').Config} */
+const token = (name) => `rgb(var(--${name}) / <alpha-value>)`
+
 module.exports = {
-  content: ['./app/**/*.{ts,tsx}', './lib/**/*.{ts,tsx}'],
+  content: ['./app/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        ink: { 950: '#0b1020', 900: '#111833', 800: '#1a2347', 700: '#26315c', 600: '#3a4677' },
-        ring: { blue: '#1998d5' },
+        bg: token('bg'),
+        surface: token('surface'),
+        subtle: token('subtle'),
+        ink: token('text'),
+        muted: token('muted'),
+        line: token('line'),
+        primary: { DEFAULT: token('primary'), hover: token('primary-hover'), on: token('on-primary') },
+        success: token('success'),
+        warning: token('warning'),
+        danger: token('danger'),
       },
       fontFamily: {
-        sans: ['Atkinson Hyperlegible', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
       },
+      maxWidth: { page: '64rem' },
     },
   },
   plugins: [],

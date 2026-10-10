@@ -1,29 +1,54 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { fetchJson } from '../utils/format'
 
 export interface AppStatus {
   fixtures: boolean
   ring: { connected: boolean; mode: string | null; runtimeToken: boolean; webhookVerification: boolean }
-  aws: { credentials: boolean; region: string; perceptionModel: string; agentModel: string; store: string }
-  poller: { running: boolean; lastPollAt?: number; lastSuccessAt?: number; lastError?: string; deviceId?: string; inFlight: number }
+  aws: { credentials: boolean; region: string; perceptionModel: string; agentModel: string; store: 'local' | 'aws' }
+  poller: {
+    running: boolean
+    lastPollAt?: number
+    lastSuccessAt?: number
+    lastError?: string
+    deviceId?: string
+    inFlight: number
+  }
   lightWebhook: boolean
   timezone: string
 }
 
+/** Polls /api/status, pausing while the tab is hidden. */
 export function useStatus(intervalMs = 5000) {
   const [status, setStatus] = useState<AppStatus>()
-  const load = useCallback(async () => {
+  const [offline, setOffline] = useState(false)
+
+  const reload = useCallback(async () => {
     try {
-      setStatus(await fetch('/api/status').then((r) => r.json()))
+      setStatus(await fetchJson<AppStatus>('/api/status'))
+      setOffline(false)
     } catch {
-      // server restarting
+      setOffline(true)
     }
   }, [])
+
   useEffect(() => {
-    void load()
-    const id = setInterval(load, intervalMs)
-    return () => clearInterval(id)
-  }, [load, intervalMs])
-  return { status, reload: load }
+    let id: ReturnType<typeof setInterval> | undefined
+    const schedule = () => {
+      clearInterval(id)
+      if (document.visibilityState === 'visible') {
+        void reload()
+        id = setInterval(reload, intervalMs)
+      }
+    }
+    schedule()
+    document.addEventListener('visibilitychange', schedule)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', schedule)
+    }
+  }, [reload, intervalMs])
+
+  return { status, offline, reload }
 }
