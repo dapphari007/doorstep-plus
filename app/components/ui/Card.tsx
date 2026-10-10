@@ -15,9 +15,21 @@ export function SectionTitle({ children, action, id }: { children: ReactNode; ac
   )
 }
 
-export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: ReactNode; action?: ReactNode }) {
+export function PageHeader({
+  title,
+  subtitle,
+  action,
+  centered = false,
+}: {
+  title: string
+  subtitle?: ReactNode
+  action?: ReactNode
+  centered?: boolean
+}) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <div
+      className={`mb-6 flex flex-wrap gap-3 ${centered ? 'flex-col items-center text-center md:mb-10' : 'items-end justify-between'}`}
+    >
       <div className="min-w-0">
         <h1 className="text-3xl font-semibold leading-tight tracking-tight md:text-[44px]">{title}</h1>
         {subtitle && <p className="mt-1 text-muted">{subtitle}</p>}

@@ -100,29 +100,30 @@ export default function RecallPage() {
 
   return (
     <Container>
-      <div className="max-w-3xl">
+      <div className="mx-auto max-w-3xl">
         <PageHeader
+          centered
           title="Ask your door"
           subtitle="Questions about anything your doorbell has seen since you connected it."
         />
 
         <div className="space-y-4" aria-live="polite">
           {turns.length === 0 && !busy && (
-            <Card className="p-5">
+            <div className="text-center">
               <p className="text-sm font-medium text-muted">Try asking</p>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => void ask(s)}
-                    className="rounded-full border border-line px-3.5 py-2 text-left text-sm hover:bg-subtle"
+                    className="rounded-full border border-line bg-surface px-4 py-2 text-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:text-primary hover:shadow-sm"
                   >
                     {s}
                   </button>
                 ))}
               </div>
-            </Card>
+            </div>
           )}
 
           {turns.map((t) =>

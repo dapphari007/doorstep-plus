@@ -65,8 +65,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                     key={item.href}
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
-                    className={`flex items-center border-b-2 text-[17px] font-medium transition-colors ${
-                      active ? 'border-primary text-ink' : 'border-transparent text-muted hover:text-ink'
+                    className={`relative flex items-center text-[17px] font-medium transition-colors duration-200 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-left after:rounded-full after:bg-primary after:transition-transform after:duration-300 after:content-[''] ${
+                      active
+                        ? 'text-ink after:scale-x-100'
+                        : 'text-muted after:scale-x-0 hover:text-ink hover:after:scale-x-100'
                     }`}
                   >
                     {item.label}
@@ -103,9 +105,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Link
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium ${active ? 'text-primary' : 'text-muted'}`}
+                  className={`group flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${active ? 'text-primary' : 'text-muted'}`}
                 >
-                  <Icon name={item.icon} className="h-6 w-6" />
+                  <Icon
+                    name={item.icon}
+                    className={`h-6 w-6 transition-transform duration-200 ${active ? '-translate-y-0.5' : 'group-active:scale-90'}`}
+                  />
                   {item.label}
                 </Link>
               </li>
