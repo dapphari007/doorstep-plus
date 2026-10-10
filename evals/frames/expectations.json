@@ -1,0 +1,32 @@
+{
+  "playground-package-on-step.jpg": {
+    "note": "Ring Playground 'Package' stream: a cardboard box with a shipping label on snowy steps, nobody in view.",
+    "package.present": true,
+    "category": [
+      "delivery"
+    ],
+    "actors.max": 0
+  },
+  "playground-motion-birds.jpg": {
+    "note": "Ring Playground 'Motion' stream: birds at snowy bird feeders, no people.",
+    "package.present": false,
+    "category": [
+      "animal"
+    ]
+  },
+  "playground-vehicle-empty-driveway.jpg": {
+    "note": "Ring Playground 'Vehicle' stream, camera 1: empty driveway, cars parked far in the background. Parked background cars are not news.",
+    "package.present": false,
+    "category": [
+      "no_activity",
+      "other"
+    ]
+  },
+  "playground-vehicle-car-in-lot.jpg": {
+    "note": "Ring Playground 'Vehicle' stream, camera 2: a grey car in the driving lane of a parking lot.",
+    "package.present": false,
+    "category": [
+      "vehicle"
+    ]
+  }
+}

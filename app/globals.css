@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background: #0b1020;
+  color: #e7ecff;
+}
+
+/* Profile-driven type scale. The <html> element carries data-profile. */
+html[data-profile='lowvision'] { font-size: 125%; }
+html[data-profile='lowvision'] body { background: #000; color: #fff; }
+html[data-profile='lowvision'] .card { border-color: #fff; border-width: 2px; }
+
+*:focus-visible {
+  outline: 3px solid #facc15;
+  outline-offset: 3px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-ink-700 bg-ink-900 p-5;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold transition
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-ring-blue text-white hover:bg-sky-500;
+  }
+  .btn-ghost {
+    @apply btn border border-ink-600 text-slate-100 hover:bg-ink-800;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flash-layer { transition: none !important; }
+}
