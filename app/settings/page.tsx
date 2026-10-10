@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { alertKindForEvent, isSilent } from '@/lib/alerts'
 import { StatusDot } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card, Container, PageHeader, SectionTitle } from '../components/ui/Card'
@@ -152,11 +153,24 @@ function DeviceName() {
 }
 
 export default function SettingsPage() {
-  const { profile, setProfile, prefs, setPrefs, status, serverOffline: offline, reloadStatus: reload } = useApp()
+  const {
+    profile,
+    setProfile,
+    prefs,
+    setPrefs,
+    status,
+    serverOffline: offline,
+    reloadStatus: reload,
+    events,
+    previewAlert,
+  } = useApp()
 
   const setPref = (key: keyof AlertPrefs, value: boolean) => setPrefs({ ...prefs, [key]: value })
 
+  // Replays your latest real event exactly as it would be announced; falls back to a plain test.
   const testAlert = () => {
+    const latest = events.find((e) => e.status === 'described' && !e.repeatOf && !isSilent(alertKindForEvent(e)))
+    if (latest) return previewAlert(latest)
     if (prefs.chime) chime()
     if (prefs.vibrate) vibrate([300, 150, 300])
     if (prefs.speak) speak('This is a test alert from Doorstep.')
