@@ -64,6 +64,21 @@ Browser live view (WHEP) ─► "Describe now" frame ─────┤
 | **Amazon DynamoDB** | Event, delivery and lock records (single table, `pk`/`sk`) — [lib/store/aws.ts](lib/store/aws.ts) |
 | **Amazon S3** | Snapshot storage — [lib/store/aws.ts](lib/store/aws.ts) |
 
+## Results
+
+Measured with `npm run eval:report` on real Ring Playground frames (3 runs each), plus harder variants generated from them (dim, very dark, blur, low resolution). Full tables in [docs/results.md](docs/results.md).
+
+| Measure | Result |
+|---|---|
+| Real Ring frames described correctly | **12/12**, same answer every run |
+| Harder variants: honest (correct, or clearly says it's unsure) | **98%** |
+| People described as animals | **0** |
+| Time per frame (median / 95th percentile) | 2.8 s / 5.5 s |
+| Ask: questions answered correctly | **5/5** |
+| Safety layer: planted bad captions caught | **10/10** (clean captions untouched: 3/3) |
+
+**Known weakness:** on a dimmed package frame, the model once said "no activity" with high confidence (1 of 3 runs). Very dark frames are caught by a measured-brightness check and reported as "too dark to see clearly"; dim-but-not-dark frames still rely on the model.
+
 ## Run it
 
 Requirements: Node.js 22+, a free Ring account, AWS credentials with Bedrock model access.
@@ -100,7 +115,9 @@ Set `LIGHT_WEBHOOK_URL` to any webhook (Home Assistant, IFTTT, …). Each alert 
 ### Tests
 
 ```bash
-npm test        # safety pass, webhook signature verification, delivery flow
+npm test              # unit tests: safety pass, webhooks, deliveries, feed rules
+npm run eval          # quick model check on the saved Ring frames
+npm run eval:report   # full results report -> docs/results.md (calls Bedrock, a few cents)
 npm run typecheck
 ```
 

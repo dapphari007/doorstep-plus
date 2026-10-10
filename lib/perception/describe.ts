@@ -2,6 +2,7 @@
 
 import { AnthropicBedrockMantle } from '@anthropic-ai/bedrock-sdk'
 import { BedrockRuntimeClient, ConverseCommand } from '@aws-sdk/client-bedrock-runtime'
+import sharp from 'sharp'
 import { config } from '../config'
 import { PerceptionSchema, type ModelPerception, type Perception } from './schema'
 import { applySafety } from './safety'
@@ -58,7 +59,11 @@ export interface DescribeInput {
   fixtureScene?: string
 }
 
-type Turn = { role: 'user' | 'assistant'; text: string; image?: { bytes: Buffer; mediaType: 'image/jpeg' | 'image/png' } }
+type Turn = {
+  role: 'user' | 'assistant'
+  text: string
+  image?: { bytes: Buffer; mediaType: 'image/jpeg' | 'image/png' }
+}
 
 /** Claude models go through Anthropic's Bedrock Mantle client. */
 async function askClaude(turns: Turn[]): Promise<string> {
@@ -72,7 +77,12 @@ async function askClaude(turns: Turn[]): Promise<string> {
       role: t.role,
       content: [
         ...(t.image
-          ? [{ type: 'image', source: { type: 'base64', media_type: t.image.mediaType, data: t.image.bytes.toString('base64') } }]
+          ? [
+              {
+                type: 'image',
+                source: { type: 'base64', media_type: t.image.mediaType, data: t.image.bytes.toString('base64') },
+              },
+            ]
           : []),
         { type: 'text', text: t.text },
       ],
@@ -98,13 +108,33 @@ async function askConverse(turns: Turn[]): Promise<string> {
       messages: turns.map((t) => ({
         role: t.role,
         content: [
-          ...(t.image ? [{ image: { format: t.image.mediaType === 'image/png' ? ('png' as const) : ('jpeg' as const), source: { bytes: t.image.bytes } } }] : []),
+          ...(t.image
+            ? [
+                {
+                  image: {
+                    format: t.image.mediaType === 'image/png' ? ('png' as const) : ('jpeg' as const),
+                    source: { bytes: t.image.bytes },
+                  },
+                },
+              ]
+            : []),
           { text: t.text },
         ],
       })),
     }),
   )
   return (res.output?.message?.content || []).map((c) => c.text || '').join('')
+}
+
+/** Mean brightness 0-255 of an image, or undefined if it can't be read. */
+export async function brightnessOf(image: Buffer): Promise<number | undefined> {
+  try {
+    const { channels } = await sharp(image).stats()
+    const rgb = channels.slice(0, 3)
+    return rgb.reduce((sum, c) => sum + c.mean, 0) / rgb.length
+  } catch {
+    return undefined
+  }
 }
 
 export function isClaudeModel(modelId: string) {
@@ -123,7 +153,9 @@ export async function describeFrame(input: DescribeInput): Promise<Perception> {
     {
       role: 'user',
       image: { bytes: input.image, mediaType: input.mediaType },
-      text: input.ringHint ? `Ring reported this event as: ${input.ringHint}. Describe the frame.` : 'Describe the frame.',
+      text: input.ringHint
+        ? `Ring reported this event as: ${input.ringHint}. Describe the frame.`
+        : 'Describe the frame.',
     },
   ]
 
@@ -133,7 +165,7 @@ export async function describeFrame(input: DescribeInput): Promise<Perception> {
     try {
       const parsed: ModelPerception = PerceptionSchema.parse(extractJson(text))
       return {
-        ...applySafety(parsed),
+        ...applySafety(parsed, { brightness: await brightnessOf(input.image) }),
         model: config.aws.perceptionModel,
         latencyMs: Date.now() - started,
       }

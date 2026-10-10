@@ -65,6 +65,8 @@ The resident may be blind, deaf or have low vision, and answers may be read alou
 - Describe what happened, never who someone is. Do not speculate about identities.
 - Always call search_events before concluding that nothing happened. The delivery log only lists drop-offs where a courier was seen; a package can also appear in events without a delivery record, so for package questions check both.
 - "Is it still there?" means: was there a later event with package_filter = picked_up? If not, say it was last seen at the door at that time.
+- For time ranges, prefer within_hours (e.g. 24 for "today", 2 for "this afternoon" if it is mid-afternoon) instead of computing timestamps yourself.
+- Before answering that something did NOT happen, search again without category or keyword filters over the last 24 hours and read the results.
 - If nothing matches, say so plainly and mention the time range you searched.
 - When the resident asks for a report, incident summary, or something to send to a carrier, landlord or insurer, call build_incident_report.
 
@@ -85,24 +87,32 @@ export async function askRecall(question: string, history: RecallTurn[] = []): P
     description:
       'Search described doorbell events. Filter by time range (epoch ms), category and/or keywords. Returns newest first.',
     inputSchema: z.object({
+      within_hours: z
+        .number()
+        .min(0.1)
+        .max(720)
+        .optional()
+        .describe('Only events from the last N hours. Prefer this over since_ms.'),
       since_ms: z.number().optional().describe('Only events at or after this epoch ms'),
       until_ms: z.number().optional().describe('Only events at or before this epoch ms'),
-      categories: z
-        .array(z.enum(['delivery', 'visitor', 'vehicle', 'animal', 'no_activity', 'other']))
-        .optional(),
+      categories: z.array(z.enum(['delivery', 'visitor', 'vehicle', 'animal', 'no_activity', 'other'])).optional(),
       keywords: z.string().optional().describe('Words to look for in captions, e.g. "box van"'),
       package_filter: z
         .enum(['package_seen', 'picked_up'])
         .optional()
-        .describe('package_seen: any event where a package was visible (dropped off or sitting at the door). picked_up: someone took a package away.'),
+        .describe(
+          'package_seen: any event where a package was visible (dropped off or sitting at the door). picked_up: someone took a package away.',
+        ),
       limit: z.number().min(1).max(50).optional(),
     }),
     callback: async (input) => {
-      let events = await store.listEvents({ since: input.since_ms, until: input.until_ms, limit: 500 })
+      const since = input.within_hours ? Date.now() - input.within_hours * 3600_000 : input.since_ms
+      let events = await store.listEvents({ since, until: input.until_ms, limit: 500 })
       if (input.categories?.length)
         events = events.filter((e) => e.perception && input.categories!.includes(e.perception.category))
       if (input.package_filter === 'package_seen') events = events.filter((e) => e.perception?.package.present)
-      if (input.package_filter === 'picked_up') events = events.filter((e) => e.perception?.package.action === 'picked_up')
+      if (input.package_filter === 'picked_up')
+        events = events.filter((e) => e.perception?.package.action === 'picked_up')
       if (input.keywords) events = events.filter((e) => matchesText(e, input.keywords!))
       const out = events.slice(0, input.limit ?? 20)
       out.forEach((e) => touched.add(e.id))
@@ -118,7 +128,12 @@ export async function askRecall(question: string, history: RecallTurn[] = []): P
       const e = await store.getEvent(id)
       if (!e) return { error: `No event ${id}` }
       touched.add(e.id)
-      return { ...compact(e), details: e.perception?.details, actors: e.perception?.actors, vehicle: e.perception?.vehicle }
+      return {
+        ...compact(e),
+        details: e.perception?.details,
+        actors: e.perception?.actors,
+        vehicle: e.perception?.vehicle,
+      }
     },
   })
 

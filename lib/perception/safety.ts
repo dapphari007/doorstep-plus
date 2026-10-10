@@ -3,7 +3,19 @@
 import type { ModelPerception } from './schema'
 
 const ANIMAL_WORDS = [
-  'animal', 'bear', 'ape', 'monkey', 'gorilla', 'dog', 'cat', 'creature', 'beast', 'raccoon', 'deer', 'coyote', 'fox',
+  'animal',
+  'bear',
+  'ape',
+  'monkey',
+  'gorilla',
+  'dog',
+  'cat',
+  'creature',
+  'beast',
+  'raccoon',
+  'deer',
+  'coyote',
+  'fox',
 ]
 const IDENTITY_RULES: { re: RegExp; replace: (match: string, ...groups: string[]) => string }[] = [
   // Race, ethnicity and skin-tone descriptors: keep the noun, drop the descriptor.
@@ -22,6 +34,8 @@ const IDENTITY_RULES: { re: RegExp; replace: (match: string, ...groups: string[]
 const PLATE_PATTERN = /\b(?=[A-Z0-9]*\d)(?=[A-Z0-9]*[A-Z])[A-Z0-9]{2,4}[- ]?[A-Z0-9]{3,4}\b/g
 
 export const LOW_CONFIDENCE = 0.45
+/** Mean brightness (0-255) below which a frame is too dark to trust. */
+export const DARK_BRIGHTNESS = 45
 
 function scrub(text: string, notes: Set<string>): string {
   let out = text
@@ -43,7 +57,10 @@ function mentionsAnimal(text: string): boolean {
   return ANIMAL_WORDS.some((w) => new RegExp(`\\b${w}s?\\b`).test(lower))
 }
 
-export function applySafety(p: ModelPerception): ModelPerception & { safetyNotes: string[] } {
+export function applySafety(
+  p: ModelPerception,
+  frame: { brightness?: number } = {},
+): ModelPerception & { safetyNotes: string[] } {
   const notes = new Set<string>()
   const out: ModelPerception = {
     ...p,
@@ -58,7 +75,8 @@ export function applySafety(p: ModelPerception): ModelPerception & { safetyNotes
   if (out.carrierGuess) out.carrierGuess = scrub(out.carrierGuess, notes)
 
   // People are never described as animals.
-  const hasPeople = out.actors.some((a) => a.role !== 'unclear') || out.category === 'visitor' || out.category === 'delivery'
+  const hasPeople =
+    out.actors.some((a) => a.role !== 'unclear') || out.category === 'visitor' || out.category === 'delivery'
   if (hasPeople && (mentionsAnimal(out.caption) || mentionsAnimal(out.details))) {
     notes.add('Replaced animal wording in a scene with people')
     out.caption = neutralCaption(out)
@@ -66,8 +84,20 @@ export function applySafety(p: ModelPerception): ModelPerception & { safetyNotes
     if (out.category === 'animal') out.category = 'visitor'
   }
 
+  // Models sound sure about frames they can barely see; measured darkness wins.
+  const dark = frame.brightness !== undefined && frame.brightness < DARK_BRIGHTNESS
+  if (dark) {
+    notes.add('Very dark image: not trusting a confident answer')
+    out.confidence = Math.min(out.confidence, LOW_CONFIDENCE - 0.05)
+    if (out.category === 'no_activity') {
+      out.category = 'other'
+      out.caption = 'Too dark to see the door clearly'
+      out.details = 'The picture is very dark, so something could be there that the camera cannot show.'
+    }
+  }
+
   // Ambiguous scenes (night, glare, watermark) get honest, generic wording.
-  if (out.confidence < LOW_CONFIDENCE && out.category !== 'no_activity') {
+  if (out.confidence < LOW_CONFIDENCE && out.category !== 'no_activity' && !(dark && out.category === 'other')) {
     notes.add('Low confidence: using general wording')
     out.caption = hasPeople ? 'Someone may be at the door' : 'Movement near the door'
     out.actors = out.actors.map((a) => ({ ...a, role: a.role === 'delivery_person' ? 'person' : a.role }))

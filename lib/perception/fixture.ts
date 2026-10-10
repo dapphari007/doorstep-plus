@@ -6,7 +6,8 @@ const SCENES: Record<string, ModelPerception> = {
   package: {
     category: 'delivery',
     caption: 'Delivery driver leaving a box on the doorstep',
-    details: 'A person in a delivery uniform places a medium cardboard box beside the door, then walks back toward the street.',
+    details:
+      'A person in a delivery uniform places a medium cardboard box beside the door, then walks back toward the street.',
     actors: [{ role: 'delivery_person', action: 'placing a box on the step' }],
     package: { present: true, action: 'dropped_off' },
     vehicle: { present: true, kind: 'delivery van' },
@@ -51,7 +52,6 @@ export const FIXTURE_SCENES = Object.keys(SCENES)
 export function fixturePerception(scene?: string): ModelPerception {
   const key = (scene || '').toLowerCase()
   const match =
-    SCENES[key] ||
-    (key.includes('package') ? SCENES.package : key.includes('vehicle') ? SCENES.vehicle : SCENES.motion)
+    SCENES[key] || (key.includes('package') ? SCENES.package : key.includes('vehicle') ? SCENES.vehicle : SCENES.motion)
   return structuredClone(match)
 }

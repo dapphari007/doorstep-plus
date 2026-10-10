@@ -85,3 +85,21 @@ describe('applySafety wording', () => {
     expect(out.details).toBe('A man is at the door.')
   })
 })
+
+describe('dark frames', () => {
+  it('does not trust a confident "nothing here" on a very dark frame', () => {
+    const out = applySafety({ ...base, category: 'no_activity', caption: 'No activity visible', actors: [] }, { brightness: 20 })
+    expect(out.caption).toBe('Too dark to see the door clearly')
+    expect(out.confidence).toBeLessThan(LOW_CONFIDENCE)
+    expect(out.safetyNotes).toContain('Very dark image: not trusting a confident answer')
+  })
+
+  it('softens confident claims about people in the dark', () => {
+    const out = applySafety({ ...base, caption: 'A delivery driver at the door' }, { brightness: 20 })
+    expect(out.caption).toBe('Someone may be at the door')
+  })
+
+  it('leaves normal-brightness frames alone', () => {
+    expect(applySafety(base, { brightness: 140 }).caption).toBe(base.caption)
+  })
+})

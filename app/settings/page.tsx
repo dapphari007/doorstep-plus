@@ -14,15 +14,25 @@ import { chime, speak, vibrate } from '../utils/sound'
 
 const PLAYGROUND_URL = 'https://developer.amazon.com/ring/console/playground'
 
-function CheckRow({ ok, label, detail }: { ok: boolean; label: string; detail: ReactNode }) {
+function CheckRow({
+  ok,
+  label,
+  detail,
+  optional = false,
+}: {
+  ok: boolean
+  label: string
+  detail: ReactNode
+  optional?: boolean
+}) {
   return (
     <li className="flex items-start gap-3 py-3">
       <span className="mt-2">
-        <StatusDot tone={ok ? 'success' : 'warning'} />
+        <StatusDot tone={ok ? 'success' : optional ? 'neutral' : 'warning'} />
       </span>
       <div className="min-w-0">
         <p className="font-medium">
-          {label} <span className="sr-only">{ok ? '(ok)' : '(needs attention)'}</span>
+          {label} <span className="sr-only">{ok ? '(ok)' : optional ? '(optional, off)' : '(needs attention)'}</span>
         </p>
         <p className="break-words text-sm text-muted">{detail}</p>
       </div>
@@ -113,14 +123,17 @@ export default function SettingsPage() {
     if (prefs.speak) speak('This is a test alert from Doorstep.')
   }
 
+  const sessionExpired = !!status?.poller.lastError && /token/i.test(status.poller.lastError)
+  const ringOk = !!status?.ring.connected && !sessionExpired
+
   const lastCheck = status?.poller.lastSuccessAt
     ? `Last checked ${clockTime(status.poller.lastSuccessAt)}`
     : 'Waiting for Ring'
 
   return (
     <Container>
-      <div className="max-w-3xl space-y-6">
-        <PageHeader title="Settings" />
+      <div className="mx-auto max-w-3xl space-y-6">
+        <PageHeader centered title="Settings" subtitle="Your Ring account, how you're alerted, and system health." />
 
         <Card className="p-5 sm:p-6" aria-labelledby="ring-heading">
           <SectionTitle id="ring-heading">Ring account</SectionTitle>
@@ -205,9 +218,15 @@ export default function SettingsPage() {
                 />
               )}
               <CheckRow
-                ok={status.ring.connected}
+                ok={ringOk}
                 label="Ring"
-                detail={status.ring.connected ? 'Connected' : 'Not connected'}
+                detail={
+                  !status.ring.connected
+                    ? 'Not connected'
+                    : sessionExpired
+                      ? 'Session expired. Paste a new token above.'
+                      : 'Connected'
+                }
               />
               <CheckRow
                 ok={!!status.poller.lastSuccessAt && !status.poller.lastError}
@@ -229,6 +248,7 @@ export default function SettingsPage() {
                 detail={status.aws.store === 'aws' ? 'Amazon DynamoDB + S3' : 'This computer only'}
               />
               <CheckRow
+                optional
                 ok={status.lightWebhook}
                 label="Smart light"
                 detail={status.lightWebhook ? 'Connected' : 'Optional: set LIGHT_WEBHOOK_URL'}
