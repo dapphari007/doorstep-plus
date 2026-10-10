@@ -25,6 +25,22 @@ export interface DoorEvent {
   deliveryId?: string
   /** Set when a live frame shows the same scene as a recent one: stored, but no new alert. */
   repeatOf?: string
+  /** The expected visitor or parcel this event probably is. */
+  expectationId?: string
+  expectationLabel?: string
+  createdAt: number
+}
+
+/** Someone or something the household is expecting, matched by time and what is seen, never by face. */
+export interface Expectation {
+  id: string
+  kind: 'visitor' | 'parcel' | 'household'
+  label: string
+  from: number
+  until: number
+  status: 'waiting' | 'arrived' | 'cancelled'
+  matchedEventId?: string
+  matchedAt?: number
   createdAt: number
 }
 
@@ -41,6 +57,8 @@ export interface DeliveryRecord {
   /** Event that showed the package being picked up, if any. */
   takenEventId?: string
   takenAt?: number
+  /** Set when this package matched a parcel the household was expecting. */
+  expectedLabel?: string
 }
 
 export interface LockState {
@@ -55,4 +73,5 @@ export type BusMessage =
   | { kind: 'event'; event: DoorEvent }
   | { kind: 'delivery'; delivery: DeliveryRecord }
   | { kind: 'lock'; lock: LockState }
+  | { kind: 'expectation'; expectation: Expectation }
   | { kind: 'status'; status: Record<string, unknown> }

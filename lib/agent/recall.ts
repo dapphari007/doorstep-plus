@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { config, hasAwsCredentials } from '../config'
 import { getStore } from '../store'
 import type { DoorEvent } from '../types'
+import { localTimeToEpoch } from '../expectations/match'
+import { createExpectation, listExpectations } from '../expectations/service'
 import { buildIncidentReport } from './report'
 
 export interface RecallTurn {
@@ -68,6 +70,8 @@ The resident may be blind, deaf or have low vision, and answers may be read alou
 - For time ranges, prefer within_hours (e.g. 24 for "today", 2 for "this afternoon" if it is mid-afternoon) instead of computing timestamps yourself.
 - Before answering that something did NOT happen, search again without category or keyword filters over the last 24 hours and read the results.
 - If nothing matches, say so plainly and mention the time range you searched.
+- If the resident says someone or a parcel is coming ("a plumber is coming at 3 PM", "my parcel arrives today"), call expect_arrival and confirm the window back to them.
+- For "did my plumber / parcel come?", call list_expected first.
 - When the resident asks for a report, incident summary, or something to send to a carrier, landlord or insurer, call build_incident_report.
 
 Current local time: ${localTime(Date.now())} (epoch ms ${Date.now()}).`
@@ -161,6 +165,52 @@ export async function askRecall(question: string, history: RecallTurn[] = []): P
     },
   })
 
+  const expectTool = tool({
+    name: 'expect_arrival',
+    description:
+      'Record that the resident is expecting a visitor (e.g. "plumber") or a parcel, so a matching arrival is announced as "possibly your plumber". Use local clock times; the code converts them.',
+    inputSchema: z.object({
+      kind: z.enum(['visitor', 'parcel']),
+      label: z.string().min(1).max(40).describe('Short name, e.g. "Plumber", "Amazon parcel"'),
+      day: z.enum(['today', 'tomorrow']).optional(),
+      start_time: z.string().optional().describe('Local 24h time like "15:00". Omit for "any time that day".'),
+      end_time: z.string().optional().describe('Local 24h time like "16:00". Defaults to one hour after start_time.'),
+    }),
+    callback: async ({ kind, label, day, start_time, end_time }) => {
+      try {
+        const offset = day === 'tomorrow' ? 1 : 0
+        const tz = config.timezone
+        const from = start_time
+          ? localTimeToEpoch(start_time, offset, tz)
+          : Math.max(Date.now(), localTimeToEpoch('00:00', offset, tz))
+        const until = end_time
+          ? localTimeToEpoch(end_time, offset, tz)
+          : start_time
+            ? from + 3600_000
+            : localTimeToEpoch('23:59', offset, tz)
+        const x = await createExpectation({ kind, label, from, until })
+        return { saved: true, label: x.label, from: localTime(x.from), until: localTime(x.until) }
+      } catch (err) {
+        return { saved: false, error: err instanceof Error ? err.message : String(err) }
+      }
+    },
+  })
+
+  const listExpectedTool = tool({
+    name: 'list_expected',
+    description: 'Visitors and parcels the resident said they are expecting, with whether each has arrived.',
+    inputSchema: z.object({}),
+    callback: async () =>
+      (await listExpectations(20)).map((x) => ({
+        label: x.label,
+        kind: x.kind,
+        window: `${localTime(x.from)} to ${localTime(x.until)}`,
+        status: x.effectiveStatus,
+        arrived_at: x.matchedAt ? localTime(x.matchedAt) : undefined,
+        event_id: x.matchedEventId,
+      })),
+  })
+
   const reportTool = tool({
     name: 'build_incident_report',
     description:
@@ -181,7 +231,7 @@ export async function askRecall(question: string, history: RecallTurn[] = []): P
   const agent = new Agent({
     model: new BedrockModel({ region: config.aws.region, modelId: config.aws.agentModel, maxTokens: 4000 }),
     systemPrompt: systemPrompt(),
-    tools: [searchEvents, getEvent, listDeliveries, reportTool],
+    tools: [searchEvents, getEvent, listDeliveries, reportTool, expectTool, listExpectedTool],
     printer: false,
   })
 

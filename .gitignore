@@ -38,3 +38,4 @@ dist/
 .env*.local
 .data-fixtures/
 .data-check/
+.next-*/

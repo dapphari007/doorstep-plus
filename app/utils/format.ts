@@ -57,3 +57,21 @@ export function postJson<T>(url: string, data: unknown, init?: RequestInit): Pro
     body: JSON.stringify(data),
   })
 }
+
+/** "3:00 – 4:00 PM", "Any time today", "Tomorrow, 9:00 – 10:00 AM". */
+export function windowLabel(from: number, until: number, now = Date.now()): string {
+  const day = dayLabel(from, now)
+  const prefix = day === 'Today' ? '' : `${day}, `
+  const allDay = until - from >= 12 * HOUR
+  if (allDay) return `Any time ${day === 'Today' ? 'today' : day.toLowerCase()}`
+  return `${prefix}${clockTime(from)} – ${clockTime(until)}`
+}
+
+/** Epoch ms for a browser-local "HH:MM" today (+dayOffset days). */
+export function localClockToEpoch(hhmm: string, dayOffset = 0, now = new Date()): number {
+  const [h, m] = hhmm.split(':').map(Number)
+  const d = new Date(now)
+  d.setDate(d.getDate() + dayOffset)
+  d.setHours(h, m, 0, 0)
+  return d.getTime()
+}

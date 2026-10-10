@@ -1,11 +1,7 @@
 import { createHmac, timingSafeEqual } from 'crypto'
 
 // X-Signature is "sha256=" + hex HMAC of the raw body.
-export function verifyRingSignature(
-  signingKey: string,
-  rawBody: string | Buffer,
-  header: string | null,
-): boolean {
+export function verifyRingSignature(signingKey: string, rawBody: string | Buffer, header: string | null): boolean {
   if (!header) return false
   const received = header.startsWith('sha256=') ? header.slice(7) : header
   const expected = createHmac('sha256', signingKey).update(rawBody).digest('hex')

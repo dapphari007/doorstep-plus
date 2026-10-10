@@ -29,9 +29,7 @@ export async function getAccessToken(): Promise<string> {
 
   // Conflict check
   if (process.env.RING_ACCESS_TOKEN && process.env.RING_REFRESH_TOKEN) {
-    throw new Error(
-      'Both RING_ACCESS_TOKEN and RING_REFRESH_TOKEN are set. Please use only one.'
-    )
+    throw new Error('Both RING_ACCESS_TOKEN and RING_REFRESH_TOKEN are set. Please use only one.')
   }
 
   // Mode 1: Direct access token
@@ -42,9 +40,7 @@ export async function getAccessToken(): Promise<string> {
   // Mode 2: Refresh token flow (requires client credentials)
   if (process.env.RING_REFRESH_TOKEN) {
     if (!process.env.RING_CLIENT_ID || !process.env.RING_CLIENT_SECRET) {
-      throw new Error(
-        'RING_CLIENT_ID and RING_CLIENT_SECRET are required when using RING_REFRESH_TOKEN'
-      )
+      throw new Error('RING_CLIENT_ID and RING_CLIENT_SECRET are required when using RING_REFRESH_TOKEN')
     }
 
     if (cachedToken && Date.now() < cachedToken.expiresAt) {
@@ -80,6 +76,6 @@ export async function getAccessToken(): Promise<string> {
   }
 
   throw new Error(
-    'Ring is not connected. Paste a Playground token on the Settings page, or set RING_ACCESS_TOKEN / RING_REFRESH_TOKEN in .env.local'
+    'Ring is not connected. Paste a Playground token on the Settings page, or set RING_ACCESS_TOKEN / RING_REFRESH_TOKEN in .env.local',
   )
 }

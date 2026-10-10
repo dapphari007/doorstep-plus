@@ -74,9 +74,7 @@ export async function listDevices(): Promise<RingDevice[]> {
   const body = await res.json()
   const included: any[] = body?.included || []
   return (body?.data || []).map((d: any) => {
-    const status = included.find(
-      (i) => i.type === 'device-status' && i.id === d.relationships?.status?.data?.id,
-    )
+    const status = included.find((i) => i.type === 'device-status' && i.id === d.relationships?.status?.data?.id)
     const conf = included.find(
       (i) => i.type === 'device-configurations' && i.id === d.relationships?.configurations?.data?.id,
     )
@@ -101,13 +99,8 @@ export async function resolveDeviceId(): Promise<string> {
   return cachedDeviceId
 }
 
-export async function getHistory(
-  deviceId: string,
-  eventTypes = 'on_demand,motion,ding',
-): Promise<RingHistoryEvent[]> {
-  const res = await ringFetch(
-    `/v1/history/devices/${encodeURIComponent(deviceId)}/events?event_types=${eventTypes}`,
-  )
+export async function getHistory(deviceId: string, eventTypes = 'on_demand,motion,ding'): Promise<RingHistoryEvent[]> {
+  const res = await ringFetch(`/v1/history/devices/${encodeURIComponent(deviceId)}/events?event_types=${eventTypes}`)
   const body = await res.json()
   return (body?.data || []).map((e: any) => ({
     id: e.id,
@@ -125,10 +118,7 @@ export interface Snapshot {
 }
 
 // Media endpoints answer 303 with a pre-signed URL; follow it without our token.
-export async function downloadSnapshot(
-  deviceId: string,
-  window: { start: number; end?: number },
-): Promise<Snapshot> {
+export async function downloadSnapshot(deviceId: string, window: { start: number; end?: number }): Promise<Snapshot> {
   const body = window.end
     ? {
         type: 'latest_in_range',
@@ -148,11 +138,7 @@ export async function downloadSnapshot(
 }
 
 /** Download a recorded clip (MP4). Does not trigger recording; footage must exist. */
-export async function downloadClip(
-  deviceId: string,
-  timestamp: number,
-  durationMs: number,
-): Promise<Snapshot> {
+export async function downloadClip(deviceId: string, timestamp: number, durationMs: number): Promise<Snapshot> {
   const res = await ringFetch(`/v1/devices/${encodeURIComponent(deviceId)}/media/video/download`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -193,10 +179,11 @@ async function followMediaRedirect(res: Response): Promise<Snapshot> {
 }
 
 export async function startWhepSession(deviceId: string, sdpOffer: string) {
-  const res = await ringFetch(
-    `/v1/devices/${encodeURIComponent(deviceId)}/media/streaming/whep/sessions`,
-    { method: 'POST', headers: { 'Content-Type': 'application/sdp' }, body: sdpOffer },
-  )
+  const res = await ringFetch(`/v1/devices/${encodeURIComponent(deviceId)}/media/streaming/whep/sessions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/sdp' },
+    body: sdpOffer,
+  })
   return { sdpAnswer: await res.text(), sessionUrl: res.headers.get('Location') }
 }
 

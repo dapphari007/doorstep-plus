@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { publish } from './bus'
 import { config } from './config'
 import { handleDeliveryLogic } from './delivery/flow'
+import { applyExpectations } from './expectations/service'
 import { notifyLight } from './notify/light'
 import { describeFrame } from './perception/describe'
 import { RingApiError, downloadSnapshot } from './ring/client'
@@ -20,7 +21,10 @@ export const REPEAT_WINDOW_MS = 90_000
 
 /** What has to change for a frame to count as news. */
 export function sceneSignature(p: Perception): string {
-  const roles = p.actors.map((a) => a.role).sort().join(',')
+  const roles = p.actors
+    .map((a) => a.role)
+    .sort()
+    .join(',')
   return [p.category, p.package.present, p.package.action, p.vehicle.present, roles].join('|')
 }
 
@@ -51,7 +55,9 @@ async function fetchSnapshot(e: IncomingRingEvent) {
       const retryable = err instanceof RingApiError && (err.mediaMayAppear || err.status === 429)
       if (!retryable || attempt >= MEDIA_RETRY_DELAYS_MS.length) throw err
       const wait = (err as RingApiError).retryAfterMs ?? MEDIA_RETRY_DELAYS_MS[attempt]
-      console.log(`[pipeline] snapshot not ready (${(err as RingApiError).status} ${(err as RingApiError).code ?? ''}), retry ${attempt + 1} in ${wait / 1000}s`)
+      console.log(
+        `[pipeline] snapshot not ready (${(err as RingApiError).status} ${(err as RingApiError).code ?? ''}), retry ${attempt + 1} in ${wait / 1000}s`,
+      )
       await sleep(wait)
     }
   }
@@ -141,7 +147,16 @@ export async function processLiveFrame(args: {
 }
 
 async function finish(event: DoorEvent): Promise<DoorEvent> {
-  if (event.status === 'described' && !event.repeatOf) {
+  const newScene = event.status === 'described' && !event.repeatOf
+  // A doorbell press matters even if Ring had no picture for it.
+  if (newScene || event.ringType === 'ding') {
+    try {
+      await applyExpectations(event)
+    } catch (err) {
+      console.warn('[pipeline] expectation matching failed:', err)
+    }
+  }
+  if (newScene) {
     try {
       const delivery = await handleDeliveryLogic(event)
       if (delivery) event.deliveryId = delivery.id

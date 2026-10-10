@@ -2,7 +2,6 @@ import { existsSync } from 'fs'
 import { homedir } from 'os'
 import path from 'path'
 
-
 function num(name: string, fallback: number): number {
   const raw = process.env[name]
   const parsed = raw ? Number(raw) : NaN

@@ -42,6 +42,7 @@ export async function handleDeliveryLogic(event: DoorEvent): Promise<DeliveryRec
       status: verified ? 'verified' : 'needs_review',
       carrierGuess: p?.carrierGuess,
       summary: p?.details || p?.caption || 'Package delivery reported by Ring',
+      expectedLabel: event.expectationLabel,
     }
     if (verified) {
       const { code, expiresAt } = await issueDeliveryCode(delivery.id)
@@ -62,6 +63,7 @@ export async function handleDeliveryLogic(event: DoorEvent): Promise<DeliveryRec
       status: 'needs_review',
       carrierGuess: p.carrierGuess,
       summary: `Package spotted at the door. ${p.details}`,
+      expectedLabel: event.expectationLabel,
     }
     await store.putDelivery(delivery)
     publish({ kind: 'delivery', delivery })

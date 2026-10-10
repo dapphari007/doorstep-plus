@@ -90,3 +90,42 @@ describe('stored preferences', () => {
     expect(isAlertPrefs({ flash: 'yes' })).toBe(false)
   })
 })
+
+describe('activity filters', () => {
+  it('groups events by what happened', async () => {
+    const { matchesFilter } = await import('@/app/utils/feed')
+    const parcel = ev('p', NOW)
+    const visitor = ev('v', NOW, {
+      perception: {
+        ...ev('x', NOW).perception!,
+        category: 'visitor',
+        package: { present: false, action: 'none' },
+        actors: [{ role: 'person', action: 'waiting' }],
+      },
+    })
+    const car = ev('c', NOW, {
+      perception: {
+        ...ev('x', NOW).perception!,
+        category: 'vehicle',
+        package: { present: false, action: 'none' },
+        vehicle: { present: true, kind: 'car' },
+      },
+    })
+    const ding = ev('d', NOW, { ringType: 'ding', perception: undefined, status: 'no_media' })
+    const expected = ev('e', NOW, { expectationId: 'x1' })
+    expect(matchesFilter(parcel, 'deliveries')).toBe(true)
+    expect(matchesFilter(visitor, 'deliveries')).toBe(false)
+    expect(matchesFilter(visitor, 'people')).toBe(true)
+    expect(matchesFilter(car, 'vehicles')).toBe(true)
+    expect(matchesFilter(car, 'people')).toBe(false)
+    expect(matchesFilter(ding, 'doorbell')).toBe(true)
+    expect(matchesFilter(expected, 'expected')).toBe(true)
+    expect(matchesFilter(car, 'all')).toBe(true)
+  })
+
+  it('labels expected windows', async () => {
+    const { windowLabel } = await import('@/app/utils/format')
+    expect(windowLabel(NOW, NOW + 3600_000, NOW)).toMatch(/–/)
+    expect(windowLabel(NOW - 3600_000, NOW + 14 * 3600_000, NOW)).toBe('Any time today')
+  })
+})

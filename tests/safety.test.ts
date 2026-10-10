@@ -88,7 +88,10 @@ describe('applySafety wording', () => {
 
 describe('dark frames', () => {
   it('does not trust a confident "nothing here" on a very dark frame', () => {
-    const out = applySafety({ ...base, category: 'no_activity', caption: 'No activity visible', actors: [] }, { brightness: 20 })
+    const out = applySafety(
+      { ...base, category: 'no_activity', caption: 'No activity visible', actors: [] },
+      { brightness: 20 },
+    )
     expect(out.caption).toBe('Too dark to see the door clearly')
     expect(out.confidence).toBeLessThan(LOW_CONFIDENCE)
     expect(out.safetyNotes).toContain('Very dark image: not trusting a confident answer')

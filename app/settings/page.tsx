@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { StatusDot } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card, Container, PageHeader, SectionTitle } from '../components/ui/Card'
@@ -8,7 +8,7 @@ import { InlineMessage } from '../components/ui/EmptyState'
 import { Switch } from '../components/ui/Switch'
 import { useApp } from '../providers/AppProvider'
 import { clockTime, errorMessage, postJson } from '../utils/format'
-import { PROFILES, type AlertPrefs, type ProfileId } from '../utils/profiles'
+import { PROFILES, readDeviceName, writeDeviceName, type AlertPrefs, type ProfileId } from '../utils/profiles'
 import { chime, speak, vibrate } from '../utils/sound'
 
 const PLAYGROUND_URL = 'https://developer.amazon.com/ring/console/playground'
@@ -111,6 +111,46 @@ function ConnectRing({ onConnected }: { onConnected: () => void }) {
   )
 }
 
+function DeviceName() {
+  const [name, setName] = useState('')
+  const [saved, setSaved] = useState(false)
+  useEffect(() => setName(readDeviceName() ?? ''), [])
+  const save = (e: FormEvent) => {
+    e.preventDefault()
+    if (!name.trim()) return
+    writeDeviceName(name)
+    setSaved(true)
+  }
+  return (
+    <form onSubmit={save} className="space-y-3">
+      <p className="text-sm text-muted">
+        Used by "I'm heading home" so your arrival is announced as "possibly {name.trim() || 'you'} arriving home".
+        Saved on this device only.
+      </p>
+      <div className="flex gap-2">
+        <label htmlFor="device-name-setting" className="sr-only">
+          Your name
+        </label>
+        <input
+          id="device-name-setting"
+          value={name}
+          maxLength={40}
+          onChange={(e) => {
+            setName(e.target.value)
+            setSaved(false)
+          }}
+          placeholder="Your name"
+          className="h-11 min-w-0 flex-1 rounded-full border border-line bg-surface px-4 text-[15px]"
+        />
+        <Button type="submit" variant="secondary" disabled={!name.trim()}>
+          Save
+        </Button>
+      </div>
+      {saved && <InlineMessage tone="success">Saved.</InlineMessage>}
+    </form>
+  )
+}
+
 export default function SettingsPage() {
   const { profile, setProfile, prefs, setPrefs, status, serverOffline: offline, reloadStatus: reload } = useApp()
 
@@ -137,6 +177,11 @@ export default function SettingsPage() {
         <Card className="p-5 sm:p-6" aria-labelledby="ring-heading">
           <SectionTitle id="ring-heading">Ring account</SectionTitle>
           <ConnectRing onConnected={() => void reload()} />
+        </Card>
+
+        <Card className="p-5 sm:p-6" aria-labelledby="household-heading">
+          <SectionTitle id="household-heading">This device</SectionTitle>
+          <DeviceName />
         </Card>
 
         <Card className="p-5 sm:p-6" aria-labelledby="alerts-heading">

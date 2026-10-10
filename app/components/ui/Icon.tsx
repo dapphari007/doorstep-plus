@@ -24,6 +24,9 @@ const PATHS = {
   shield: 'M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z',
   chevron: 'M9 6l6 6-6 6',
   video: 'M3 7h12v10H3zM15 10l6-3v10l-6-3z',
+  bell: 'M6 16V11a6 6 0 1 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0',
+  clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
+  plus: 'M12 5v14M5 12h14',
 } as const
 
 export type IconName = keyof typeof PATHS

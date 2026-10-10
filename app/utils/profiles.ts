@@ -62,3 +62,8 @@ export function writeStored(key: string, value: unknown) {
     // storage blocked (private mode): preferences just won't persist
   }
 }
+
+export const DEVICE_NAME_KEY = 'dc.name'
+const isName = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0 && v.length <= 40
+export const readDeviceName = () => readStored(DEVICE_NAME_KEY, isName)
+export const writeDeviceName = (name: string) => writeStored(DEVICE_NAME_KEY, name.trim())

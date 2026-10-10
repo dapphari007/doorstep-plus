@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import type { BusMessage, DeliveryRecord, DoorEvent, LockState } from '@/lib/types'
+import type { BusMessage, DeliveryRecord, DoorEvent, Expectation, LockState } from '@/lib/types'
 import { useStatus, type AppStatus } from '../hooks/useStatus'
 import { shouldAlert } from '../utils/feed'
 import { fetchJson } from '../utils/format'
@@ -28,6 +28,7 @@ interface AppState {
   setPrefs: (p: AlertPrefs) => void
   events: DoorEvent[]
   deliveries: DeliveryRecord[]
+  expectations: Expectation[]
   lock?: LockState
   loaded: boolean
   connected: boolean
@@ -60,6 +61,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefsState] = useState<AlertPrefs>(PROFILES.standard.prefs)
   const [events, setEvents] = useState<DoorEvent[]>([])
   const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([])
+  const [expectations, setExpectations] = useState<Expectation[]>([])
   const [lock, setLock] = useState<LockState>()
   const [loaded, setLoaded] = useState(false)
   const [connected, setConnected] = useState(false)
@@ -92,13 +94,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      const [ev, dl] = await Promise.all([
+      const [ev, dl, ex] = await Promise.all([
         fetchJson<{ events: DoorEvent[] }>('/api/events?limit=200'),
         fetchJson<{ deliveries: DeliveryRecord[]; lock: LockState }>('/api/deliveries'),
+        fetchJson<{ expectations: Expectation[] }>('/api/expectations'),
       ])
       setEvents(ev.events)
       setDeliveries(dl.deliveries)
       setLock(dl.lock)
+      setExpectations(ex.expectations)
     } catch {
       // server restarting; the SSE reconnect will call refresh again
     } finally {
@@ -122,6 +126,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     } else if (msg.kind === 'lock') {
       setLock(msg.lock)
+    } else if (msg.kind === 'expectation') {
+      setExpectations((list) => upsert(list, msg.expectation, (x) => x.from))
     }
   }, [])
 
@@ -168,6 +174,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setPrefs,
         events,
         deliveries,
+        expectations,
         lock,
         loaded,
         connected,

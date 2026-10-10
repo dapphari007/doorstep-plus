@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { EventRow } from './components/EventRow'
+import { ExpectedCard } from './components/ExpectedCard'
 import { LiveViewCard } from './components/LiveViewCard'
 import { Button } from './components/ui/Button'
 import { Container, PageHeader, SectionTitle } from './components/ui/Card'
 import { EmptyState } from './components/ui/EmptyState'
 import { useNow } from './hooks/useNow'
 import { useApp } from './providers/AppProvider'
-import { groupByDay, visibleEvents } from './utils/feed'
+import { FEED_FILTERS, groupByDay, matchesFilter, visibleEvents, type FeedFilter } from './utils/feed'
 import { errorMessage, postJson } from './utils/format'
 import { PROFILES } from './utils/profiles'
 
@@ -21,8 +22,9 @@ export default function HomePage() {
   const [shown, setShown] = useState(PAGE_SIZE)
   const [checking, setChecking] = useState(false)
   const [checkError, setCheckError] = useState<string>()
+  const [filter, setFilter] = useState<FeedFilter>('all')
 
-  const feed = useMemo(() => visibleEvents(events), [events])
+  const feed = useMemo(() => visibleEvents(events).filter((e) => matchesFilter(e, filter)), [events, filter])
   const groups = useMemo(() => groupByDay(feed.slice(0, shown), now), [feed, shown, now])
 
   const ringConnected = !!status?.ring.connected
@@ -46,9 +48,12 @@ export default function HomePage() {
       <Container>
         <PageHeader title="Front door" />
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] xl:gap-16">
-          <section aria-labelledby="live-heading" className="min-w-0">
-            <LiveViewCard ringConnected={ringConnected} fixtures={fixtures} />
-          </section>
+          <div className="min-w-0 space-y-6">
+            <section aria-labelledby="live-heading">
+              <LiveViewCard ringConnected={ringConnected} fixtures={fixtures} />
+            </section>
+            <ExpectedCard now={now} />
+          </div>
 
           <section aria-labelledby="activity-heading" className="min-w-0">
             <SectionTitle
@@ -69,6 +74,30 @@ export default function HomePage() {
                 {PROFILES[profile].label}
               </Link>
             </p>
+            <div
+              role="group"
+              aria-label="Filter activity"
+              className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {FEED_FILTERS.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  aria-pressed={filter === f.id}
+                  onClick={() => {
+                    setFilter(f.id)
+                    setShown(PAGE_SIZE)
+                  }}
+                  className={`h-8 shrink-0 rounded-full border px-3.5 text-sm font-medium transition-colors ${
+                    filter === f.id
+                      ? 'border-primary bg-primary text-primary-on'
+                      : 'border-line text-muted hover:border-primary hover:text-primary'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
             {checkError && (
               <p role="alert" className="mb-3 text-sm text-danger">
                 {checkError}
@@ -82,8 +111,15 @@ export default function HomePage() {
                 ))}
               </div>
             ) : feed.length === 0 ? (
-              <EmptyState icon="door" title="No activity yet">
-                Events from your doorbell will show up here.
+              <EmptyState
+                icon="door"
+                title={
+                  filter === 'all'
+                    ? 'No activity yet'
+                    : `Nothing under ${FEED_FILTERS.find((f) => f.id === filter)?.label} yet`
+                }
+              >
+                {filter === 'all' ? 'Events from your doorbell will show up here.' : 'Try another filter, or All.'}
               </EmptyState>
             ) : (
               <>

@@ -1,3 +1,4 @@
+import { alertKindForEvent, isSilent } from '@/lib/alerts'
 import type { DoorEvent } from '@/lib/types'
 import { dayLabel } from './format'
 
@@ -24,13 +25,37 @@ export function groupByDay(events: DoorEvent[], now = Date.now()): { day: string
   return groups
 }
 
-/** Should a freshly streamed event pop an alert? */
+/** Should a freshly streamed event pop an alert? Doorbell presses alert even without a picture. */
 export function shouldAlert(e: DoorEvent, since: number, alreadyAlerted: Set<string>): boolean {
-  return (
-    e.status === 'described' &&
-    !e.repeatOf &&
-    e.perception?.category !== 'no_activity' &&
-    e.createdAt >= since &&
-    !alreadyAlerted.has(e.id)
-  )
+  const ready = e.status === 'described' || (e.ringType === 'ding' && e.status !== 'pending')
+  return ready && !e.repeatOf && !isSilent(alertKindForEvent(e)) && e.createdAt >= since && !alreadyAlerted.has(e.id)
+}
+
+export type FeedFilter = 'all' | 'deliveries' | 'people' | 'vehicles' | 'doorbell' | 'expected'
+
+export const FEED_FILTERS: { id: FeedFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'deliveries', label: 'Deliveries' },
+  { id: 'people', label: 'People' },
+  { id: 'vehicles', label: 'Vehicles' },
+  { id: 'doorbell', label: 'Doorbell' },
+  { id: 'expected', label: 'Expected' },
+]
+
+export function matchesFilter(e: DoorEvent, filter: FeedFilter): boolean {
+  const p = e.perception
+  switch (filter) {
+    case 'deliveries':
+      return !!e.deliveryId || !!p?.package.present
+    case 'people':
+      return !!p && (p.category === 'visitor' || p.actors.some((a) => a.role !== 'unclear'))
+    case 'vehicles':
+      return !!p && (p.category === 'vehicle' || p.vehicle.present)
+    case 'doorbell':
+      return e.ringType === 'ding'
+    case 'expected':
+      return !!e.expectationId
+    default:
+      return true
+  }
 }

@@ -30,6 +30,7 @@ Reply with ONLY a JSON object, no prose, matching this TypeScript type:
   "caption": string,          // <= 12 words, present tense, e.g. "Delivery driver leaving a box on the step"
   "details": string,          // 1-2 sentences with useful specifics (where the package is, what the person is doing)
   "actors": { "role": "delivery_person" | "person" | "child" | "group" | "unclear", "action": string }[],
+  "atDoor": boolean,          // true if a person is at or walking up to the door; false if only passing in the background (street, sidewalk)
   "package": { "present": boolean, "action": "dropped_off" | "picked_up" | "present" | "none" | "unclear" },
   "vehicle": { "present": boolean, "kind"?: string },   // kind like "delivery van", "car", "truck"
   "carrierGuess"?: string,    // only from visible uniform/van branding, e.g. "UPS"; omit otherwise

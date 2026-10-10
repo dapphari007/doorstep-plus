@@ -10,7 +10,8 @@ import { EmptyState, InlineMessage } from '../components/ui/EmptyState'
 import { Icon } from '../components/ui/Icon'
 import { useNow } from '../hooks/useNow'
 import { useApp } from '../providers/AppProvider'
-import { clockTime, errorMessage, postJson, relativeTime, secondsLeft } from '../utils/format'
+import { GRACE_MS, effectiveStatus } from '@/lib/expectations/match'
+import { clockTime, errorMessage, postJson, relativeTime, secondsLeft, windowLabel } from '../utils/format'
 
 const STATUS: Record<
   DeliveryRecord['status'],
@@ -153,6 +154,34 @@ function ParcelBox({ lock, now }: { lock?: LockState; now: number }) {
   )
 }
 
+function ExpectedParcels({ now }: { now: number }) {
+  const { expectations } = useApp()
+  const parcels = expectations
+    .filter((x) => x.kind === 'parcel' && x.status !== 'cancelled' && x.until + GRACE_MS > now - 12 * 3600_000)
+    .sort((a, b) => a.from - b.from)
+  if (!parcels.length) return null
+  return (
+    <ul className="mb-4 space-y-2 rounded-2xl bg-subtle p-3">
+      {parcels.map((x) => {
+        const status = effectiveStatus(x, now)
+        return (
+          <li key={x.id} className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="font-medium">Expected: {x.label}</span>
+            <span className="text-muted">{windowLabel(x.from, x.until, now)}</span>
+            <Badge tone={status === 'arrived' ? 'success' : status === 'missed' ? 'neutral' : 'primary'}>
+              {status === 'arrived'
+                ? `Arrived ${x.matchedAt ? clockTime(x.matchedAt) : ''}`
+                : status === 'missed'
+                  ? "Didn't arrive"
+                  : 'Waiting'}
+            </Badge>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 export default function DeliveriesPage() {
   const { deliveries, events, lock, loaded } = useApp()
   const now = useNow()
@@ -168,6 +197,7 @@ export default function DeliveriesPage() {
         <div className="min-w-0 lg:order-2">
           <Card className="p-5 sm:p-6" aria-labelledby="pod-heading">
             <SectionTitle id="pod-heading">Packages</SectionTitle>
+            <ExpectedParcels now={now} />
             {loaded && deliveries.length === 0 ? (
               <EmptyState icon="box" title="No packages yet">
                 When a package shows up at your door, it appears here.
@@ -186,6 +216,7 @@ export default function DeliveriesPage() {
                         </Badge>
                         <span className="text-sm text-muted">{relativeTime(d.at, now)}</span>
                         {d.carrierGuess && <span className="text-sm text-muted">· {d.carrierGuess}</span>}
+                        {d.expectedLabel && <Badge tone="success">Possibly {d.expectedLabel}</Badge>}
                       </div>
                       <p className="mt-2 break-words">{d.summary}</p>
                       {(drop || taken) && (

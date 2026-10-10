@@ -111,7 +111,11 @@ describe('package already at the door', () => {
     // Seeing the same package again does not create a second record.
     expect(await handleDeliveryLogic(event('s2', t + 10_000, sitting))).toBeUndefined()
     const taken = await handleDeliveryLogic(
-      event('s3', t + 20_000, { ...sitting, actors: [{ role: 'person', action: 'carrying the box away' }], package: { present: true, action: 'picked_up' } }),
+      event('s3', t + 20_000, {
+        ...sitting,
+        actors: [{ role: 'person', action: 'carrying the box away' }],
+        package: { present: true, action: 'picked_up' },
+      }),
     )
     expect(taken?.status).toBe('taken')
     expect(taken?.id).toBe(spotted?.id)

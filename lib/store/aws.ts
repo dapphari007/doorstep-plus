@@ -3,7 +3,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb'
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import type { DeliveryRecord, DoorEvent, LockState } from '../types'
+import type { DeliveryRecord, DoorEvent, Expectation, LockState } from '../types'
 import { filterAndSort, type ListOptions, type Store } from './types'
 
 export class AwsStore implements Store {
@@ -85,5 +85,14 @@ export class AwsStore implements Store {
   }
   putLock(lock: LockState) {
     return this.put('LOCK', 'parcel-box', lock)
+  }
+  getExpectation(id: string) {
+    return this.get<Expectation>('EXPECT', id)
+  }
+  putExpectation(expectation: Expectation) {
+    return this.put('EXPECT', expectation.id, expectation)
+  }
+  async listExpectations(limit = 100) {
+    return filterAndSort(await this.all<Expectation>('EXPECT'), { limit })
   }
 }

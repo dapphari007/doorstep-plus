@@ -2,12 +2,13 @@
 
 import { promises as fs, existsSync, readFileSync } from 'fs'
 import path from 'path'
-import type { DeliveryRecord, DoorEvent, LockState } from '../types'
+import type { DeliveryRecord, DoorEvent, Expectation, LockState } from '../types'
 import { filterAndSort, type ListOptions, type Store } from './types'
 
 interface Db {
   events: Record<string, DoorEvent>
   deliveries: Record<string, DeliveryRecord>
+  expectations?: Record<string, Expectation>
   lock?: LockState
 }
 
@@ -25,9 +26,7 @@ export class LocalStore implements Store {
   constructor(dir: string) {
     this.dbPath = path.join(dir, 'db.json')
     this.snapDir = path.join(dir, 'snapshots')
-    this.db = existsSync(this.dbPath)
-      ? JSON.parse(readFileSync(this.dbPath, 'utf8'))
-      : { events: {}, deliveries: {} }
+    this.db = existsSync(this.dbPath) ? JSON.parse(readFileSync(this.dbPath, 'utf8')) : { events: {}, deliveries: {} }
   }
 
   private persist() {
@@ -57,7 +56,10 @@ export class LocalStore implements Store {
     await fs.writeFile(path.join(this.snapDir, `${safeName(eventId)}.${ext}`), bytes)
   }
   async getSnapshot(eventId: string) {
-    for (const [ext, contentType] of [['jpg', 'image/jpeg'], ['png', 'image/png']] as const) {
+    for (const [ext, contentType] of [
+      ['jpg', 'image/jpeg'],
+      ['png', 'image/png'],
+    ] as const) {
       const p = path.join(this.snapDir, `${safeName(eventId)}.${ext}`)
       if (existsSync(p)) return { bytes: await fs.readFile(p), contentType }
     }
@@ -79,5 +81,15 @@ export class LocalStore implements Store {
   async putLock(lock: LockState) {
     this.db.lock = lock
     await this.persist()
+  }
+  async getExpectation(id: string) {
+    return this.db.expectations?.[id]
+  }
+  async putExpectation(expectation: Expectation) {
+    this.db.expectations = { ...this.db.expectations, [expectation.id]: expectation }
+    await this.persist()
+  }
+  async listExpectations(limit = 100) {
+    return filterAndSort(Object.values(this.db.expectations ?? {}), { limit })
   }
 }

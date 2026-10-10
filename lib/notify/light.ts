@@ -1,13 +1,13 @@
 // Optional webhook so a smart light can flash the same alert pattern.
 
-import { PATTERNS, alertKindFor } from '../alerts'
+import { PATTERNS, alertKindForEvent, isSilent } from '../alerts'
 import { config } from '../config'
 import type { DoorEvent } from '../types'
 
 export async function notifyLight(event: DoorEvent): Promise<void> {
   if (!config.lightWebhookUrl || !event.perception) return
-  const pattern = PATTERNS[alertKindFor(event.perception)]
-  if (pattern.kind === 'quiet') return
+  const pattern = PATTERNS[alertKindForEvent(event)]
+  if (isSilent(pattern.kind)) return
   try {
     await fetch(config.lightWebhookUrl, {
       method: 'POST',
