@@ -15,6 +15,12 @@ Built for the Amazon Developer Hackathon 2026: **Ring track** (accessibility, Io
 | 📦 **Deliveries** | Every package seen at the door, with photos and times. Expected parcels are linked; a later pickup raises an alert. A clearly labelled simulated parcel box opens for verified couriers with a one-time code. |
 | 🛡 **Safe by design** | No face recognition, no licence plates, no identity guesses. A deterministic safety layer edits every AI description before anyone sees or hears it — a person can never be captioned as an animal, and very dark frames say "too dark to see" instead of guessing. |
 
+## Live demo
+
+**[Try the read-only demo](https://vgso5tpy4uw5u2a5igztqzc7me0knnxq.lambda-url.us-east-1.on.aws/)** — real events recorded from the Ring Developer Playground, with Ask, filters, Deliveries and "Play a sample alert" (try each alert profile). Live view and anything that changes data are turned off, because they need a personal Ring token. The [demo video](#) shows the live Ring flow.
+
+It runs serverless on **AWS Lambda** (arm64, container image via the AWS Lambda Web Adapter) behind a Lambda Function URL: it sleeps when nobody visits and costs almost nothing. The function has its own read-only IAM role (read DynamoDB and S3 snapshots, call one Bedrock model), a concurrency cap of 3, and Ask is rate-limited. Update it with `./scripts/deploy-demo.sh`.
+
 ## Why
 
 From Ring app reviews (App Store, Trustpilot, Ring Community):

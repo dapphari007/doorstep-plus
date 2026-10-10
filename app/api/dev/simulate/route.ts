@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { config } from '@/lib/config'
 import { FIXTURE_SCENES } from '@/lib/perception/fixture'
 import { processRingEvent } from '@/lib/pipeline'
+import { blockedInDemo } from '@/lib/demo'
 
 /** FIXTURE_MODE only: inject a fake Ring event to exercise the pipeline without Ring or AWS. */
 export async function POST(req: NextRequest) {
+  const blocked = blockedInDemo()
+  if (blocked) return blocked
   if (!config.fixtures) return NextResponse.json({ error: 'Only available with FIXTURE_MODE=true' }, { status: 404 })
   const { scene } = await req.json()
   if (!FIXTURE_SCENES.includes(scene))

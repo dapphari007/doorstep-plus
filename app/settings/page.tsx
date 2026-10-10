@@ -176,7 +176,14 @@ export default function SettingsPage() {
 
         <Card className="p-5 sm:p-6" aria-labelledby="ring-heading">
           <SectionTitle id="ring-heading">Ring account</SectionTitle>
-          <ConnectRing onConnected={() => void reload()} />
+          {status?.demo ? (
+            <p className="text-sm text-muted">
+              This public demo shows recorded Ring Playground events. Connecting a Ring account is turned off here; run
+              the app locally to connect your own.
+            </p>
+          ) : (
+            <ConnectRing onConnected={() => void reload()} />
+          )}
         </Card>
 
         <Card className="p-5 sm:p-6" aria-labelledby="household-heading">

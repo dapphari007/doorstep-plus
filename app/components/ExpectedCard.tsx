@@ -212,7 +212,8 @@ function HeadingHome() {
 }
 
 export function ExpectedCard({ now }: { now: number }) {
-  const { expectations } = useApp()
+  const { expectations, status } = useApp()
+  const readOnly = !!status?.demo
   const [adding, setAdding] = useState(false)
   const [cancelling, setCancelling] = useState<string>()
   const [error, setError] = useState<string>()
@@ -244,7 +245,7 @@ export function ExpectedCard({ now }: { now: number }) {
         <h2 id="expected-heading" className="text-lg font-semibold">
           Expecting someone?
         </h2>
-        {!adding && (
+        {!adding && !readOnly && (
           <Button size="sm" variant="secondary" icon="plus" onClick={() => setAdding(true)}>
             Add
           </Button>
@@ -286,7 +287,11 @@ export function ExpectedCard({ now }: { now: number }) {
       )}
       {error && <InlineMessage tone="danger">{error}</InlineMessage>}
       {adding && <AddForm onDone={() => setAdding(false)} />}
-      <HeadingHome />
+      {readOnly ? (
+        <p className="mt-3 text-xs text-muted">Adding visitors is turned off in this read-only demo.</p>
+      ) : (
+        <HeadingHome />
+      )}
     </section>
   )
 }

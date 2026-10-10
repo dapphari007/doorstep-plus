@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import { DemoAlertCard } from './components/DemoAlertCard'
 import { EventRow } from './components/EventRow'
 import { ExpectedCard } from './components/ExpectedCard'
 import { LiveViewCard } from './components/LiveViewCard'
@@ -50,7 +51,7 @@ export default function HomePage() {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] xl:gap-16">
           <div className="min-w-0 space-y-6">
             <section aria-labelledby="live-heading">
-              <LiveViewCard ringConnected={ringConnected} fixtures={fixtures} />
+              {status?.demo ? <DemoAlertCard /> : <LiveViewCard ringConnected={ringConnected} fixtures={fixtures} />}
             </section>
             <ExpectedCard now={now} />
           </div>

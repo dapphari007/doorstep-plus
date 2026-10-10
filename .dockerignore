@@ -1,0 +1,10 @@
+node_modules
+.next
+.next-*
+.data
+.data-*
+.env*.local
+.env
+.git
+docs/results.json
+*.log

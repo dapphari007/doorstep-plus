@@ -231,7 +231,8 @@ export async function askDoor(question: string, history: AskTurn[] = []): Promis
   const agent = new Agent({
     model: new BedrockModel({ region: config.aws.region, modelId: config.aws.agentModel, maxTokens: 4000 }),
     systemPrompt: systemPrompt(),
-    tools: [searchEvents, getEvent, listDeliveries, reportTool, expectTool, listExpectedTool],
+    // The read-only demo can't add expected visitors.
+    tools: [searchEvents, getEvent, listDeliveries, reportTool, listExpectedTool, ...(config.demo ? [] : [expectTool])],
     printer: false,
   })
 

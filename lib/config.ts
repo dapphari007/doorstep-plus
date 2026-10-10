@@ -29,6 +29,8 @@ export const config = {
   },
   // Fixture mode fakes Ring and Bedrock for UI work; fixture events are labelled in the UI.
   fixtures: process.env.FIXTURE_MODE === 'true',
+  // Public read-only demo: recorded events and Ask only; nothing can be changed.
+  demo: process.env.DEMO_MODE === 'true',
   lightWebhookUrl: process.env.LIGHT_WEBHOOK_URL || undefined,
   dataDir: process.env.DATA_DIR || '.data',
   timezone: process.env.HOME_TIMEZONE || 'America/Los_Angeles',

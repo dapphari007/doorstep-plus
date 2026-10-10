@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { config } from '@/lib/config'
 import { processRingEvent } from '@/lib/pipeline'
 import { parseRingWebhook, verifyRingSignature } from '@/lib/ring/webhook'
+import { blockedInDemo } from '@/lib/demo'
 
 export const runtime = 'nodejs'
 
@@ -9,6 +10,8 @@ const seen = new Set<string>()
 
 // Real-device webhooks: verify the raw body, answer fast, process in the background.
 export async function POST(req: NextRequest) {
+  const blocked = blockedInDemo()
+  if (blocked) return blocked
   const raw = await req.text()
   const key = config.ring.webhookSigningKey
   if (!key) return NextResponse.json({ error: 'Webhook signing key not configured' }, { status: 503 })

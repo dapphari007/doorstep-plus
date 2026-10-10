@@ -1,0 +1,17 @@
+# Read-only public demo on AWS Lambda (arm64), via the AWS Lambda Web Adapter.
+FROM public.ecr.aws/docker/library/node:22-bookworm-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY . .
+ENV NEXT_STANDALONE=true NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+FROM public.ecr.aws/docker/library/node:22-bookworm-slim
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1 /lambda-adapter /opt/extensions/lambda-adapter
+WORKDIR /app
+ENV NODE_ENV=production PORT=8080 HOSTNAME=0.0.0.0 NEXT_TELEMETRY_DISABLED=1 \
+    AWS_LWA_READINESS_CHECK_PATH=/api/status DEMO_MODE=true
+COPY --from=build /app/.next/standalone ./
+COPY --from=build /app/.next/static ./.next/static
+CMD ["node", "server.js"]

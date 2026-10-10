@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveDeviceId, startWhepSession, stopWhepSession } from '@/lib/ring/client'
+import { blockedInDemo } from '@/lib/demo'
 
 /** WHEP signalling proxy: the browser sends its SDP offer, we forward it to Ring. */
 export async function POST(req: NextRequest) {
+  const blocked = blockedInDemo()
+  if (blocked) return blocked
   try {
     const { sdpOffer, deviceId } = await req.json()
     if (!sdpOffer) return NextResponse.json({ error: 'Missing sdpOffer' }, { status: 400 })
@@ -13,6 +16,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const blocked = blockedInDemo()
+  if (blocked) return blocked
   try {
     const { sessionUrl } = await req.json()
     if (!sessionUrl) return NextResponse.json({ error: 'Missing sessionUrl' }, { status: 400 })

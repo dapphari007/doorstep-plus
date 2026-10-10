@@ -31,7 +31,7 @@ const STATUS: Record<
   taken: { label: 'Picked up', tone: 'danger', help: 'Someone later picked the package up from the door.' },
 }
 
-function ParcelBox({ lock, now }: { lock?: LockState; now: number }) {
+function ParcelBox({ lock, now, readOnly }: { lock?: LockState; now: number; readOnly: boolean }) {
   const [code, setCode] = useState('')
   const [pending, setPending] = useState<'unlock' | 'lock' | 'reset'>()
   const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string }>()
@@ -98,56 +98,64 @@ function ParcelBox({ lock, now }: { lock?: LockState; now: number }) {
         </p>
       )}
 
-      <form onSubmit={submit} className="mt-4 flex gap-2">
-        <label htmlFor="code" className="sr-only">
-          One-time code
-        </label>
-        <input
-          id="code"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          pattern="\d{6}"
-          maxLength={6}
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          placeholder="6-digit code"
-          className="h-11 w-full min-w-0 rounded-full border border-line bg-surface px-4 font-mono tracking-widest placeholder:font-sans placeholder:tracking-normal placeholder:text-muted"
-        />
-        <Button type="submit" disabled={code.length !== 6} loading={pending === 'unlock'}>
-          Unlock
-        </Button>
-      </form>
+      {readOnly ? (
+        <p className="mt-4 text-sm text-muted">
+          The parcel box is simulated (Ring's API has no lock control). Its controls are off in this read-only demo.
+        </p>
+      ) : (
+        <>
+          <form onSubmit={submit} className="mt-4 flex gap-2">
+            <label htmlFor="code" className="sr-only">
+              One-time code
+            </label>
+            <input
+              id="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="\d{6}"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="6-digit code"
+              className="h-11 w-full min-w-0 rounded-full border border-line bg-surface px-4 font-mono tracking-widest placeholder:font-sans placeholder:tracking-normal placeholder:text-muted"
+            />
+            <Button type="submit" disabled={code.length !== 6} loading={pending === 'unlock'}>
+              Unlock
+            </Button>
+          </form>
 
-      <p className="mt-2 text-xs text-muted">
-        A one-time code is issued when a courier and a package are clearly seen on camera.
-      </p>
+          <p className="mt-2 text-xs text-muted">
+            A one-time code is issued when a courier and a package are clearly seen on camera.
+          </p>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {open && (
-          <Button
-            size="sm"
-            variant="secondary"
-            icon="lock"
-            onClick={() => void act('lock')}
-            loading={pending === 'lock'}
-          >
-            Lock now
-          </Button>
-        )}
-        <Button
-          size="sm"
-          variant="secondary"
-          icon="refresh"
-          onClick={() => void act('reset')}
-          loading={pending === 'reset'}
-        >
-          Reset simulator
-        </Button>
-      </div>
-      {message && (
-        <div className="mt-3">
-          <InlineMessage tone={message.tone}>{message.text}</InlineMessage>
-        </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {open && (
+              <Button
+                size="sm"
+                variant="secondary"
+                icon="lock"
+                onClick={() => void act('lock')}
+                loading={pending === 'lock'}
+              >
+                Lock now
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="secondary"
+              icon="refresh"
+              onClick={() => void act('reset')}
+              loading={pending === 'reset'}
+            >
+              Reset simulator
+            </Button>
+          </div>
+          {message && (
+            <div className="mt-3">
+              <InlineMessage tone={message.tone}>{message.text}</InlineMessage>
+            </div>
+          )}
+        </>
       )}
 
       <details className="mt-5 border-t border-line pt-4">
@@ -195,7 +203,8 @@ function ExpectedParcels({ now }: { now: number }) {
 }
 
 export default function DeliveriesPage() {
-  const { deliveries, events, lock, loaded } = useApp()
+  const { deliveries, events, lock, loaded, status } = useApp()
+  const readOnly = !!status?.demo
   const now = useNow()
   const byId = new Map(events.map((e) => [e.id, e]))
 
@@ -280,7 +289,7 @@ export default function DeliveriesPage() {
           </Card>
         </div>
         <div className="min-w-0 lg:order-1">
-          <ParcelBox lock={lock} now={now} />
+          <ParcelBox lock={lock} now={now} readOnly={readOnly} />
         </div>
       </div>
     </Container>

@@ -11,6 +11,9 @@ export function StatusBanner() {
 
   if (serverOffline) {
     text = "Can't reach the Doorstep server. Retrying…"
+  } else if (status?.demo) {
+    text =
+      'Read-only demo with recorded Ring Playground events. Try Ask, the filters, and "Play a sample alert" with each alert profile.'
   } else if (!status) {
     return null
   } else if (status.fixtures) {

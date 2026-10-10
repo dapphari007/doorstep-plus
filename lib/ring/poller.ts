@@ -96,6 +96,7 @@ export async function pollOnce(): Promise<number> {
 }
 
 export function startPoller() {
+  if (config.demo) return
   if (state.status.running || !config.poller.enabled || config.fixtures) return
   state.status.running = true
   const tick = async () => {

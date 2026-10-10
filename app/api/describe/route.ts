@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { config } from '@/lib/config'
 import { processLiveFrame } from '@/lib/pipeline'
 import { resolveDeviceId } from '@/lib/ring/client'
+import { blockedInDemo } from '@/lib/demo'
 
 export const runtime = 'nodejs'
 
@@ -21,6 +22,8 @@ function decode(dataUrl: unknown): { bytes: Buffer; mediaType: MediaType } | und
  * about a second apart) so movement can be described, or a single `image`.
  */
 export async function POST(req: NextRequest) {
+  const blocked = blockedInDemo()
+  if (blocked) return blocked
   try {
     const { image, images, hint, deviceId } = await req.json()
     const raw: unknown[] = Array.isArray(images) ? images : image ? [image] : []

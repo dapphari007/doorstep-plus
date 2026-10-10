@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   return NextResponse.json({
     fixtures: config.fixtures,
+    demo: config.demo,
     ring: {
       connected: hasRingAuth() || hasRuntimeAccessToken(),
       mode: getAuthMode(),

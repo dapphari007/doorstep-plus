@@ -34,6 +34,8 @@ interface AppState {
   connected: boolean
   alert?: AlertItem
   dismissAlert: () => void
+  /** Show an existing event as an alert again (demo and settings preview). */
+  previewAlert: (event: DoorEvent) => void
   refresh: () => Promise<void>
   status?: AppStatus
   serverOffline: boolean
@@ -131,7 +133,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const statusLoaded = status !== undefined
+  const demo = !!status?.demo
   useEffect(() => {
+    // Wait for the status so the read-only demo (no live events) never opens a stream.
+    if (!statusLoaded) return
+    if (demo) {
+      void refresh()
+      return
+    }
     let source: EventSource | undefined
     let retry: ReturnType<typeof setTimeout> | undefined
     let closed = false
@@ -161,9 +171,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clearTimeout(retry)
       source?.close()
     }
-  }, [refresh, handleMessage])
+  }, [refresh, handleMessage, demo, statusLoaded])
 
   const dismissAlert = useCallback(() => setAlert(undefined), [])
+  const previewAlert = useCallback((event: DoorEvent) => setAlert({ key: `preview-${Date.now()}`, event }), [])
 
   return (
     <AppContext.Provider
@@ -180,6 +191,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         connected,
         alert,
         dismissAlert,
+        previewAlert,
         refresh,
         status,
         serverOffline,

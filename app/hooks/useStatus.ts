@@ -5,6 +5,7 @@ import { fetchJson } from '../utils/format'
 
 export interface AppStatus {
   fixtures: boolean
+  demo?: boolean
   ring: { connected: boolean; mode: string | null; runtimeToken: boolean; webhookVerification: boolean }
   aws: { credentials: boolean; region: string; perceptionModel: string; agentModel: string; store: 'local' | 'aws' }
   poller: {

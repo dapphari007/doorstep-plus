@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getLock, manualAction } from '@/lib/delivery/lock'
+import { blockedInDemo } from '@/lib/demo'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,6 +10,8 @@ export async function GET() {
 
 /** Simulated parcel box controls: { action: 'lock' | 'unlock' | 'reset', code? } */
 export async function POST(req: NextRequest) {
+  const blocked = blockedInDemo()
+  if (blocked) return blocked
   const { action, code } = await req.json()
   if (!['lock', 'unlock', 'reset'].includes(action)) {
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
