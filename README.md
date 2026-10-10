@@ -73,7 +73,7 @@ Measured with `npm run eval:report` on real Ring Playground frames (3 runs each)
 | Real Ring frames described correctly | **12/12**, same answer every run |
 | Harder variants: honest (correct, or clearly says it's unsure) | **98%** |
 | People described as animals | **0** |
-| Time per frame (median / 95th percentile) | 2.8 s / 5.5 s |
+| Time per frame (median / 95th percentile) | 2.9 s / 6.8 s |
 | Ask: questions answered correctly | **5/5** |
 | Safety layer: planted bad captions caught | **10/10** (clean captions untouched: 3/3) |
 

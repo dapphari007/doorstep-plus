@@ -5,22 +5,46 @@ import { resolveDeviceId } from '@/lib/ring/client'
 
 export const runtime = 'nodejs'
 
-const MAX_BYTES = 4 * 1024 * 1024
+const MAX_FRAMES = 3
+const MAX_FRAME_BYTES = 4 * 1024 * 1024
+const MAX_TOTAL_BYTES = 9 * 1024 * 1024
 
-/** Describe a frame captured from the live Ring stream in the browser. */
+type MediaType = 'image/jpeg' | 'image/png'
+
+function decode(dataUrl: unknown): { bytes: Buffer; mediaType: MediaType } | undefined {
+  const match = typeof dataUrl === 'string' ? /^data:(image\/(?:jpeg|png));base64,(.+)$/.exec(dataUrl) : null
+  return match ? { bytes: Buffer.from(match[2], 'base64'), mediaType: match[1] as MediaType } : undefined
+}
+
+/**
+ * Describe what the live view shows. Send `images` (up to 3 data URLs, oldest first,
+ * about a second apart) so movement can be described, or a single `image`.
+ */
 export async function POST(req: NextRequest) {
   try {
-    const { image, hint, deviceId } = await req.json()
-    const match = typeof image === 'string' ? /^data:(image\/(?:jpeg|png));base64,(.+)$/.exec(image) : null
-    if (!match && !config.fixtures) {
-      return NextResponse.json({ error: 'Send image as a JPEG or PNG data URL' }, { status: 400 })
+    const { image, images, hint, deviceId } = await req.json()
+    const raw: unknown[] = Array.isArray(images) ? images : image ? [image] : []
+    if (raw.length > MAX_FRAMES)
+      return NextResponse.json({ error: `Send at most ${MAX_FRAMES} frames` }, { status: 400 })
+
+    const frames = raw.map(decode)
+    if (frames.some((f) => !f) || (!frames.length && !config.fixtures)) {
+      return NextResponse.json({ error: 'Send JPEG or PNG data URLs' }, { status: 400 })
     }
-    const bytes = match ? Buffer.from(match[2], 'base64') : Buffer.alloc(0)
-    if (bytes.length > MAX_BYTES) return NextResponse.json({ error: 'Image too large' }, { status: 413 })
+    const ok = frames as { bytes: Buffer; mediaType: MediaType }[]
+    if (
+      ok.some((f) => f.bytes.length > MAX_FRAME_BYTES) ||
+      ok.reduce((n, f) => n + f.bytes.length, 0) > MAX_TOTAL_BYTES
+    ) {
+      return NextResponse.json({ error: 'Images too large' }, { status: 413 })
+    }
+
+    const latest = ok[ok.length - 1]
     const event = await processLiveFrame({
       deviceId: deviceId || (config.fixtures ? 'fixture-device' : await resolveDeviceId()),
-      image: bytes,
-      mediaType: (match?.[1] as 'image/jpeg' | 'image/png') || 'image/jpeg',
+      image: latest?.bytes ?? Buffer.alloc(0),
+      earlier: ok.slice(0, -1).map((f) => f.bytes),
+      mediaType: latest?.mediaType ?? 'image/jpeg',
       hint: typeof hint === 'string' ? hint.slice(0, 40) : undefined,
     })
     return NextResponse.json({ event })

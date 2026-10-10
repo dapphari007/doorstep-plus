@@ -87,7 +87,9 @@ export function alertKindForEvent(e: Pick<DoorEvent, 'ringType' | 'perception'>)
   if (e.ringType === 'ding') return 'doorbell'
   const p = e.perception
   const kind = alertKindFor(p)
-  if (kind === 'visitor' && p?.atDoor === false && !p.package.present) return 'passing'
+  if (!p || p.package.present) return kind
+  const justPassing = p.motion === 'passing' || (kind === 'visitor' && p.atDoor === false)
+  if ((kind === 'visitor' || kind === 'vehicle') && justPassing) return 'passing'
   return kind
 }
 

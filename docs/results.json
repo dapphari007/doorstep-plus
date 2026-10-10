@@ -5,10 +5,10 @@
       "variant": "original",
       "run": 1,
       "category": "delivery",
-      "caption": "Package on the step in snow",
+      "caption": "Package on step in snow",
       "packagePresent": true,
       "confidence": 0.9,
-      "latencyMs": 2732,
+      "latencyMs": 3093,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -18,10 +18,10 @@
       "variant": "original",
       "run": 2,
       "category": "delivery",
-      "caption": "Package on the step in snow",
+      "caption": "Package left on the step in snow.",
       "packagePresent": true,
       "confidence": 0.9,
-      "latencyMs": 2897,
+      "latencyMs": 3091,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -31,10 +31,10 @@
       "variant": "original",
       "run": 3,
       "category": "delivery",
-      "caption": "Package on step in snow",
+      "caption": "Package left on the step",
       "packagePresent": true,
       "confidence": 0.9,
-      "latencyMs": 3264,
+      "latencyMs": 3089,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -43,11 +43,24 @@
       "frame": "playground-package-on-step.jpg",
       "variant": "dim",
       "run": 1,
+      "category": "delivery",
+      "caption": "Package left on the step",
+      "packagePresent": true,
+      "confidence": 0.9,
+      "latencyMs": 3091,
+      "safetyNotes": [],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-package-on-step.jpg",
+      "variant": "dim",
+      "run": 2,
       "category": "no_activity",
       "caption": "No activity visible",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 2897,
+      "latencyMs": 3964,
       "safetyNotes": [],
       "correct": false,
       "honest": false
@@ -55,25 +68,12 @@
     {
       "frame": "playground-package-on-step.jpg",
       "variant": "dim",
-      "run": 2,
-      "category": "delivery",
-      "caption": "Package left on the step",
-      "packagePresent": true,
-      "confidence": 0.8,
-      "latencyMs": 2966,
-      "safetyNotes": [],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-package-on-step.jpg",
-      "variant": "dim",
       "run": 3,
       "category": "delivery",
       "caption": "Package left on the step",
       "packagePresent": true,
       "confidence": 0.8,
-      "latencyMs": 2792,
+      "latencyMs": 2676,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -86,7 +86,7 @@
       "caption": "Too dark to see the door clearly",
       "packagePresent": false,
       "confidence": 0.1,
-      "latencyMs": 2802,
+      "latencyMs": 4130,
       "safetyNotes": [
         "Very dark image: not trusting a confident answer"
       ],
@@ -101,7 +101,7 @@
       "caption": "Too dark to see the door clearly",
       "packagePresent": false,
       "confidence": 0.1,
-      "latencyMs": 2428,
+      "latencyMs": 3565,
       "safetyNotes": [
         "Very dark image: not trusting a confident answer"
       ],
@@ -116,7 +116,7 @@
       "caption": "Too dark to see the door clearly",
       "packagePresent": false,
       "confidence": 0.1,
-      "latencyMs": 2758,
+      "latencyMs": 2617,
       "safetyNotes": [
         "Very dark image: not trusting a confident answer"
       ],
@@ -127,24 +127,11 @@
       "frame": "playground-package-on-step.jpg",
       "variant": "blur",
       "run": 1,
-      "category": "delivery",
-      "caption": "Package left on the step",
-      "packagePresent": true,
-      "confidence": 0.7,
-      "latencyMs": 2323,
-      "safetyNotes": [],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-package-on-step.jpg",
-      "variant": "blur",
-      "run": 2,
       "category": "delivery",
       "caption": "Packages left on the step",
       "packagePresent": true,
       "confidence": 0.8,
-      "latencyMs": 2483,
+      "latencyMs": 2555,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -152,12 +139,25 @@
     {
       "frame": "playground-package-on-step.jpg",
       "variant": "blur",
-      "run": 3,
+      "run": 2,
       "category": "delivery",
       "caption": "Package left on the step",
       "packagePresent": true,
       "confidence": 0.7,
-      "latencyMs": 2499,
+      "latencyMs": 2532,
+      "safetyNotes": [],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-package-on-step.jpg",
+      "variant": "blur",
+      "run": 3,
+      "category": "delivery",
+      "caption": "Package left on the step",
+      "packagePresent": true,
+      "confidence": 0.8,
+      "latencyMs": 2819,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -170,7 +170,7 @@
       "caption": "Package left on the step",
       "packagePresent": true,
       "confidence": 0.9,
-      "latencyMs": 1893,
+      "latencyMs": 1753,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -180,10 +180,10 @@
       "variant": "low-res",
       "run": 2,
       "category": "delivery",
-      "caption": "Package left on the step.",
+      "caption": "Package left on the step",
       "packagePresent": true,
       "confidence": 0.9,
-      "latencyMs": 1949,
+      "latencyMs": 1816,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -193,10 +193,10 @@
       "variant": "low-res",
       "run": 3,
       "category": "delivery",
-      "caption": "Package on the step in snow.",
+      "caption": "Package left on the step",
       "packagePresent": true,
       "confidence": 0.9,
-      "latencyMs": 1968,
+      "latencyMs": 2090,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -206,10 +206,10 @@
       "variant": "original",
       "run": 1,
       "category": "animal",
-      "caption": "Birds feeding at snowy bird feeder",
+      "caption": "Birds feeding at birdhouses in snow",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 5500,
+      "latencyMs": 6691,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -222,7 +222,7 @@
       "caption": "Birds feeding at snowy birdhouses",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 7288,
+      "latencyMs": 10548,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -232,10 +232,10 @@
       "variant": "original",
       "run": 3,
       "category": "animal",
-      "caption": "Birds feeding at snowy birdhouses.",
+      "caption": "Birds feeding at a snowy bird feeder.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 5278,
+      "latencyMs": 5968,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -244,24 +244,24 @@
       "frame": "playground-motion-birds.jpg",
       "variant": "dim",
       "run": 1,
-      "category": "animal",
-      "caption": "Birds feeding at birdhouses in snow.",
-      "packagePresent": false,
-      "confidence": 0.9,
-      "latencyMs": 5296,
-      "safetyNotes": [],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-motion-birds.jpg",
-      "variant": "dim",
-      "run": 2,
       "category": "animal",
       "caption": "Birds feeding at two birdhouses.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 5627,
+      "latencyMs": 6832,
+      "safetyNotes": [],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-motion-birds.jpg",
+      "variant": "dim",
+      "run": 2,
+      "category": "animal",
+      "caption": "Birds feeding at birdhouses in snow.",
+      "packagePresent": false,
+      "confidence": 0.9,
+      "latencyMs": 7030,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -274,7 +274,7 @@
       "caption": "Birds feeding at snowy birdhouses",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 5307,
+      "latencyMs": 6297,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -284,10 +284,10 @@
       "variant": "very-dark",
       "run": 1,
       "category": "animal",
-      "caption": "Bird feeding on a bird feeder",
+      "caption": "Birds feeding at birdhouses.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 5329,
+      "latencyMs": 5488,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -297,10 +297,10 @@
       "variant": "very-dark",
       "run": 2,
       "category": "animal",
-      "caption": "Birds feeding at birdhouses",
+      "caption": "Birds feeding at birdhouses.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 4928,
+      "latencyMs": 5613,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -310,10 +310,10 @@
       "variant": "very-dark",
       "run": 3,
       "category": "animal",
-      "caption": "Bird feeding on a bird feeder",
+      "caption": "Birds feeding at birdhouses.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 5117,
+      "latencyMs": 5614,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -323,10 +323,10 @@
       "variant": "blur",
       "run": 1,
       "category": "animal",
-      "caption": "Bird on feeder in snow",
+      "caption": "Bird feeding on a feeder",
       "packagePresent": false,
       "confidence": 0.8,
-      "latencyMs": 4807,
+      "latencyMs": 5142,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -339,7 +339,7 @@
       "caption": "Bird feeding on a feeder",
       "packagePresent": false,
       "confidence": 0.8,
-      "latencyMs": 4450,
+      "latencyMs": 4705,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -349,10 +349,10 @@
       "variant": "blur",
       "run": 3,
       "category": "animal",
-      "caption": "Bird on feeder in snow",
+      "caption": "Bird feeding on a feeder",
       "packagePresent": false,
       "confidence": 0.8,
-      "latencyMs": 4746,
+      "latencyMs": 4991,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -365,7 +365,7 @@
       "caption": "Birds feeding at birdhouses in the snow.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 3846,
+      "latencyMs": 4195,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -375,10 +375,10 @@
       "variant": "low-res",
       "run": 2,
       "category": "animal",
-      "caption": "Birds feeding at birdhouses in the snow.",
+      "caption": "Birds feeding at birdhouses.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 4144,
+      "latencyMs": 4015,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -388,10 +388,10 @@
       "variant": "low-res",
       "run": 3,
       "category": "animal",
-      "caption": "Birds feeding at birdhouses in the snow.",
+      "caption": "Birds feeding at birdhouses in snow.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 3852,
+      "latencyMs": 3610,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -404,7 +404,7 @@
       "caption": "Empty driveway with parked cars.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 2571,
+      "latencyMs": 3055,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -414,10 +414,10 @@
       "variant": "original",
       "run": 2,
       "category": "no_activity",
-      "caption": "Empty driveway with parked cars.",
+      "caption": "Empty driveway with parked cars",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 2708,
+      "latencyMs": 3005,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -427,10 +427,10 @@
       "variant": "original",
       "run": 3,
       "category": "no_activity",
-      "caption": "Empty driveway with parked cars.",
+      "caption": "Empty driveway with parked cars",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 2815,
+      "latencyMs": 2646,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -443,7 +443,7 @@
       "caption": "Too dark to see the door clearly",
       "packagePresent": false,
       "confidence": 0.4,
-      "latencyMs": 2727,
+      "latencyMs": 2544,
       "safetyNotes": [
         "Very dark image: not trusting a confident answer"
       ],
@@ -458,7 +458,7 @@
       "caption": "Too dark to see the door clearly",
       "packagePresent": false,
       "confidence": 0.4,
-      "latencyMs": 2972,
+      "latencyMs": 2801,
       "safetyNotes": [
         "Very dark image: not trusting a confident answer"
       ],
@@ -473,7 +473,7 @@
       "caption": "Too dark to see the door clearly",
       "packagePresent": false,
       "confidence": 0.4,
-      "latencyMs": 2498,
+      "latencyMs": 2613,
       "safetyNotes": [
         "Very dark image: not trusting a confident answer"
       ],
@@ -488,7 +488,7 @@
       "caption": "Too dark to see the door clearly",
       "packagePresent": false,
       "confidence": 0.4,
-      "latencyMs": 2904,
+      "latencyMs": 2857,
       "safetyNotes": [
         "Very dark image: not trusting a confident answer"
       ],
@@ -503,7 +503,7 @@
       "caption": "Too dark to see the door clearly",
       "packagePresent": false,
       "confidence": 0.4,
-      "latencyMs": 2892,
+      "latencyMs": 2685,
       "safetyNotes": [
         "Very dark image: not trusting a confident answer"
       ],
@@ -518,7 +518,7 @@
       "caption": "Too dark to see the door clearly",
       "packagePresent": false,
       "confidence": 0.4,
-      "latencyMs": 2946,
+      "latencyMs": 3441,
       "safetyNotes": [
         "Very dark image: not trusting a confident answer"
       ],
@@ -530,10 +530,10 @@
       "variant": "blur",
       "run": 1,
       "category": "no_activity",
-      "caption": "No clear activity visible",
+      "caption": "No activity visible",
       "packagePresent": false,
-      "confidence": 0.1,
-      "latencyMs": 2262,
+      "confidence": 0.2,
+      "latencyMs": 2197,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -543,10 +543,10 @@
       "variant": "blur",
       "run": 2,
       "category": "no_activity",
-      "caption": "No clear activity visible",
+      "caption": "No activity visible",
       "packagePresent": false,
-      "confidence": 0.1,
-      "latencyMs": 2437,
+      "confidence": 0.2,
+      "latencyMs": 2416,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -556,10 +556,10 @@
       "variant": "blur",
       "run": 3,
       "category": "no_activity",
-      "caption": "No clear activity visible",
+      "caption": "No activity visible",
       "packagePresent": false,
-      "confidence": 0.1,
-      "latencyMs": 2179,
+      "confidence": 0.2,
+      "latencyMs": 2284,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -571,8 +571,8 @@
       "category": "no_activity",
       "caption": "Empty driveway with no activity.",
       "packagePresent": false,
-      "confidence": 1,
-      "latencyMs": 1862,
+      "confidence": 0.9,
+      "latencyMs": 2009,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -585,7 +585,7 @@
       "caption": "Empty driveway with no activity.",
       "packagePresent": false,
       "confidence": 1,
-      "latencyMs": 1733,
+      "latencyMs": 1787,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -597,8 +597,8 @@
       "category": "no_activity",
       "caption": "Empty driveway with no activity.",
       "packagePresent": false,
-      "confidence": 1,
-      "latencyMs": 1632,
+      "confidence": 0.9,
+      "latencyMs": 1755,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -608,10 +608,10 @@
       "variant": "original",
       "run": 1,
       "category": "vehicle",
-      "caption": "Cars parked in a lot",
+      "caption": "Cars moving in a parking lot.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 3112,
+      "latencyMs": 2756,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -621,10 +621,10 @@
       "variant": "original",
       "run": 2,
       "category": "vehicle",
-      "caption": "Cars parked in a lot",
+      "caption": "Cars moving in a parking lot.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 2858,
+      "latencyMs": 3460,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -632,186 +632,186 @@
     {
       "frame": "playground-vehicle-car-in-lot.jpg",
       "variant": "original",
+      "run": 3,
+      "category": "vehicle",
+      "caption": "Cars moving in a parking lot.",
+      "packagePresent": false,
+      "confidence": 0.9,
+      "latencyMs": 3163,
+      "safetyNotes": [],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "dim",
+      "run": 1,
+      "category": "vehicle",
+      "caption": "Movement near the door",
+      "packagePresent": false,
+      "confidence": 0.4,
+      "latencyMs": 2565,
+      "safetyNotes": [
+        "Very dark image: not trusting a confident answer",
+        "Low confidence: using general wording"
+      ],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "dim",
+      "run": 2,
+      "category": "vehicle",
+      "caption": "Movement near the door",
+      "packagePresent": false,
+      "confidence": 0.4,
+      "latencyMs": 2648,
+      "safetyNotes": [
+        "Very dark image: not trusting a confident answer",
+        "Low confidence: using general wording"
+      ],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "dim",
+      "run": 3,
+      "category": "vehicle",
+      "caption": "Movement near the door",
+      "packagePresent": false,
+      "confidence": 0.4,
+      "latencyMs": 2598,
+      "safetyNotes": [
+        "Very dark image: not trusting a confident answer",
+        "Low confidence: using general wording"
+      ],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "very-dark",
+      "run": 1,
+      "category": "vehicle",
+      "caption": "Movement near the door",
+      "packagePresent": false,
+      "confidence": 0.4,
+      "latencyMs": 3281,
+      "safetyNotes": [
+        "Very dark image: not trusting a confident answer",
+        "Low confidence: using general wording"
+      ],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "very-dark",
+      "run": 2,
+      "category": "vehicle",
+      "caption": "Movement near the door",
+      "packagePresent": false,
+      "confidence": 0.4,
+      "latencyMs": 3077,
+      "safetyNotes": [
+        "Very dark image: not trusting a confident answer",
+        "Low confidence: using general wording"
+      ],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "very-dark",
+      "run": 3,
+      "category": "vehicle",
+      "caption": "Movement near the door",
+      "packagePresent": false,
+      "confidence": 0.4,
+      "latencyMs": 2731,
+      "safetyNotes": [
+        "Very dark image: not trusting a confident answer",
+        "Low confidence: using general wording"
+      ],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "blur",
+      "run": 1,
+      "category": "vehicle",
+      "caption": "Car driving past the house.",
+      "packagePresent": false,
+      "confidence": 0.8,
+      "latencyMs": 2545,
+      "safetyNotes": [],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "blur",
+      "run": 2,
+      "category": "vehicle",
+      "caption": "Car driving past the house.",
+      "packagePresent": false,
+      "confidence": 0.8,
+      "latencyMs": 2455,
+      "safetyNotes": [],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "blur",
+      "run": 3,
+      "category": "vehicle",
+      "caption": "Car driving past the house.",
+      "packagePresent": false,
+      "confidence": 0.8,
+      "latencyMs": 2427,
+      "safetyNotes": [],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "low-res",
+      "run": 1,
+      "category": "vehicle",
+      "caption": "Car driving past parked vehicles.",
+      "packagePresent": false,
+      "confidence": 0.9,
+      "latencyMs": 2165,
+      "safetyNotes": [],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "low-res",
+      "run": 2,
+      "category": "vehicle",
+      "caption": "Cars parked in a lot.",
+      "packagePresent": false,
+      "confidence": 0.9,
+      "latencyMs": 1735,
+      "safetyNotes": [],
+      "correct": true,
+      "honest": true
+    },
+    {
+      "frame": "playground-vehicle-car-in-lot.jpg",
+      "variant": "low-res",
       "run": 3,
       "category": "vehicle",
       "caption": "Cars parked in a lot.",
       "packagePresent": false,
       "confidence": 0.9,
-      "latencyMs": 2715,
-      "safetyNotes": [],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "dim",
-      "run": 1,
-      "category": "vehicle",
-      "caption": "Movement near the door",
-      "packagePresent": false,
-      "confidence": 0.4,
-      "latencyMs": 2430,
-      "safetyNotes": [
-        "Very dark image: not trusting a confident answer",
-        "Low confidence: using general wording"
-      ],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "dim",
-      "run": 2,
-      "category": "vehicle",
-      "caption": "Movement near the door",
-      "packagePresent": false,
-      "confidence": 0.4,
-      "latencyMs": 2715,
-      "safetyNotes": [
-        "Very dark image: not trusting a confident answer",
-        "Low confidence: using general wording"
-      ],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "dim",
-      "run": 3,
-      "category": "vehicle",
-      "caption": "Movement near the door",
-      "packagePresent": false,
-      "confidence": 0.4,
-      "latencyMs": 2537,
-      "safetyNotes": [
-        "Very dark image: not trusting a confident answer",
-        "Low confidence: using general wording"
-      ],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "very-dark",
-      "run": 1,
-      "category": "vehicle",
-      "caption": "Movement near the door",
-      "packagePresent": false,
-      "confidence": 0.4,
-      "latencyMs": 2816,
-      "safetyNotes": [
-        "Very dark image: not trusting a confident answer",
-        "Low confidence: using general wording"
-      ],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "very-dark",
-      "run": 2,
-      "category": "vehicle",
-      "caption": "Movement near the door",
-      "packagePresent": false,
-      "confidence": 0.4,
-      "latencyMs": 2755,
-      "safetyNotes": [
-        "Very dark image: not trusting a confident answer",
-        "Low confidence: using general wording"
-      ],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "very-dark",
-      "run": 3,
-      "category": "vehicle",
-      "caption": "Movement near the door",
-      "packagePresent": false,
-      "confidence": 0.4,
-      "latencyMs": 3052,
-      "safetyNotes": [
-        "Very dark image: not trusting a confident answer",
-        "Low confidence: using general wording"
-      ],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "blur",
-      "run": 1,
-      "category": "vehicle",
-      "caption": "Cars moving in a parking lot.",
-      "packagePresent": false,
-      "confidence": 0.8,
-      "latencyMs": 2488,
-      "safetyNotes": [],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "blur",
-      "run": 2,
-      "category": "vehicle",
-      "caption": "Cars moving in a parking lot.",
-      "packagePresent": false,
-      "confidence": 0.8,
-      "latencyMs": 2309,
-      "safetyNotes": [],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "blur",
-      "run": 3,
-      "category": "vehicle",
-      "caption": "Cars moving in a parking lot.",
-      "packagePresent": false,
-      "confidence": 0.8,
-      "latencyMs": 2266,
-      "safetyNotes": [],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "low-res",
-      "run": 1,
-      "category": "vehicle",
-      "caption": "Cars parked in a lot.",
-      "packagePresent": false,
-      "confidence": 0.9,
-      "latencyMs": 1645,
-      "safetyNotes": [],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "low-res",
-      "run": 2,
-      "category": "vehicle",
-      "caption": "Cars parked in a lot",
-      "packagePresent": false,
-      "confidence": 0.9,
-      "latencyMs": 1817,
-      "safetyNotes": [],
-      "correct": true,
-      "honest": true
-    },
-    {
-      "frame": "playground-vehicle-car-in-lot.jpg",
-      "variant": "low-res",
-      "run": 3,
-      "category": "vehicle",
-      "caption": "Cars parked in a lot",
-      "packagePresent": false,
-      "confidence": 0.9,
-      "latencyMs": 1802,
+      "latencyMs": 1965,
       "safetyNotes": [],
       "correct": true,
       "honest": true
@@ -820,48 +820,48 @@
   "recall": [
     {
       "question": "Did a package arrive today?",
-      "answer": "Yes, a package was dropped off at your door last night at 11:05 PM and someone picked it up this morning at 12:35 AM.",
+      "answer": "Yes, a package arrived last night at 11:51 PM and was picked up this morning at 1:21 AM.",
       "pass": true,
       "textOk": true,
       "citesOk": true,
       "reportOk": true,
-      "latencyMs": 2420
+      "latencyMs": 2591
     },
     {
       "question": "Is the package still there?",
-      "answer": "The package was picked up at 12:35 AM today, so it is no longer there. It was last seen at the door at 11:05 PM last night.",
+      "answer": "The package was picked up at 1:21 AM today, so it is no longer at the door. It was originally dropped off at 11:51 PM last night.",
       "pass": true,
       "textOk": true,
       "citesOk": true,
       "reportOk": true,
-      "latencyMs": 2542
+      "latencyMs": 2503
     },
     {
       "question": "Was there a car in the driveway?",
-      "answer": "Yes, a car pulled into the driveway at 1:35 AM today.",
+      "answer": "Yes, a car pulled into the driveway at 2:21 AM today. That was the only vehicle event in the last 24 hours.",
       "pass": true,
       "textOk": true,
       "citesOk": true,
       "reportOk": true,
-      "latencyMs": 2371
+      "latencyMs": 2615
     },
     {
       "question": "Did any animals come by?",
-      "answer": "Yes, birds came by at 10:05 PM last night and were at the feeder.",
+      "answer": "Yes, birds were seen at the feeder at 10:51 PM yesterday.",
       "pass": true,
       "textOk": true,
       "citesOk": true,
       "reportOk": true,
-      "latencyMs": 2578
+      "latencyMs": 3361
     },
     {
       "question": "Make an incident report for my missing package",
-      "answer": "Your incident report titled \"Missing Package Incident\" has been created successfully, including the two events where the box was dropped off and later taken. You can use this report to file a claim with your carrier or insurer.",
+      "answer": "Your missing package incident report is ready. It covers the delivery at 11:51 PM last night and the pickup at 1:21 AM this morning. You can download it using the link that was just sent to your device.",
       "pass": true,
       "textOk": true,
       "citesOk": true,
       "reportOk": true,
-      "latencyMs": 3698
+      "latencyMs": 6971
     }
   ],
   "safety": [

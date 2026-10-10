@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DoorEvent } from '@/lib/types'
 import { useLiveStream } from '../hooks/useLiveStream'
 import { errorMessage, postJson } from '../utils/format'
+import { captureBurst, captureFrame, hasChanged } from '../utils/frames'
 import { Badge } from './ui/Badge'
 import { Button } from './ui/Button'
 import { Card } from './ui/Card'
@@ -13,19 +14,10 @@ import { Icon } from './ui/Icon'
 import { Spinner } from './ui/Spinner'
 import { Switch } from './ui/Switch'
 
-const DESCRIBE_EVERY_MS = 8000
+const DESCRIBE_EVERY_MS = 3000
 const RECONNECT_DELAY_MS = 1500
 const MAX_RETRIES = 3
 const FIXTURE_SCENES = ['package', 'vehicle', 'motion', 'pickup'] as const
-
-function grabFrame(video: HTMLVideoElement | null): string | undefined {
-  if (!video || !video.videoWidth || !video.videoHeight) return undefined
-  const canvas = document.createElement('canvas')
-  canvas.width = video.videoWidth
-  canvas.height = video.videoHeight
-  canvas.getContext('2d')?.drawImage(video, 0, 0)
-  return canvas.toDataURL('image/jpeg', 0.85)
-}
 
 export function LiveViewCard({ ringConnected, fixtures }: { ringConnected: boolean; fixtures: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -34,6 +26,7 @@ export function LiveViewCard({ ringConnected, fixtures }: { ringConnected: boole
   const [describing, setDescribing] = useState(false)
   const [message, setMessage] = useState<{ tone: 'success' | 'warning'; text: string }>()
   const busy = useRef(false)
+  const lastSent = useRef<Uint8Array>()
   const retries = useRef(0)
 
   const canStream = ringConnected && !fixtures
@@ -41,8 +34,7 @@ export function LiveViewCard({ ringConnected, fixtures }: { ringConnected: boole
 
   const describe = useCallback(async (quiet = false) => {
     if (busy.current) return
-    const image = grabFrame(videoRef.current)
-    if (!image) {
+    if (!captureFrame(videoRef.current)) {
       if (!quiet) setMessage({ tone: 'warning', text: 'Start the live view first, then describe what you see.' })
       return
     }
@@ -50,7 +42,20 @@ export function LiveViewCard({ ringConnected, fixtures }: { ringConnected: boole
     setDescribing(true)
     if (!quiet) setMessage(undefined)
     try {
-      const { event } = await postJson<{ event: DoorEvent }>('/api/describe', { image })
+      // A short burst lets the AI see movement: arriving, leaving, passing by.
+      const frames = await captureBurst(videoRef.current)
+      if (!frames.length) throw new Error('The live view stopped')
+      // Keep watching only spends an AI call when the picture changed since the last one.
+      if (
+        quiet &&
+        !hasChanged(
+          frames.map((f) => f.thumb),
+          lastSent.current,
+        )
+      )
+        return
+      lastSent.current = frames[frames.length - 1].thumb
+      const { event } = await postJson<{ event: DoorEvent }>('/api/describe', { images: frames.map((f) => f.dataUrl) })
       if (event.status === 'error') throw new Error(event.error || 'Could not describe this frame')
       if (!quiet) setMessage({ tone: 'success', text: event.perception?.caption ?? 'Described' })
     } catch (err) {

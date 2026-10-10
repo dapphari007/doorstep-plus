@@ -13,7 +13,8 @@
     "check:bedrock": "node --env-file-if-exists=.env.local scripts/check-bedrock.mjs",
     "eval": "node --env-file-if-exists=.env.local node_modules/vitest/vitest.mjs run --config vitest.eval.config.ts evals/describe.eval.test.ts",
     "format": "prettier --write app lib tests evals scripts",
-    "eval:report": "node --env-file-if-exists=.env.local node_modules/vitest/vitest.mjs run --config vitest.eval.config.ts evals/report.eval.test.ts"
+    "eval:report": "node --env-file-if-exists=.env.local node_modules/vitest/vitest.mjs run --config vitest.eval.config.ts evals/report.eval.test.ts",
+    "eval:motion": "node --env-file-if-exists=.env.local node_modules/vitest/vitest.mjs run --config vitest.eval.config.ts evals/motion.eval.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/bedrock-sdk": "^0.34.4",

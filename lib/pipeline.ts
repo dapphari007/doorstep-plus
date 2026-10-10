@@ -25,7 +25,7 @@ export function sceneSignature(p: Perception): string {
     .map((a) => a.role)
     .sort()
     .join(',')
-  return [p.category, p.package.present, p.package.action, p.vehicle.present, roles].join('|')
+  return [p.category, p.package.present, p.package.action, p.vehicle.present, roles, p.motion ?? 'none'].join('|')
 }
 
 /** Failed events are retried on later polls, but not forever. */
@@ -108,7 +108,10 @@ export async function processRingEvent(incoming: IncomingRingEvent): Promise<Doo
 /** Describe a frame grabbed from the live WHEP stream in the browser. */
 export async function processLiveFrame(args: {
   deviceId: string
+  /** The latest frame. */
   image: Buffer
+  /** Earlier frames from the same moment, oldest first. */
+  earlier?: Buffer[]
   mediaType: 'image/jpeg' | 'image/png'
   hint?: string
 }): Promise<DoorEvent> {
@@ -129,8 +132,9 @@ export async function processLiveFrame(args: {
   try {
     event.perception = await describeFrame({
       image: args.image,
+      earlier: args.earlier,
       mediaType: args.mediaType,
-      ringHint: 'live view frame',
+      ringHint: 'live view',
       fixtureScene: args.hint,
     })
     event.status = 'described'

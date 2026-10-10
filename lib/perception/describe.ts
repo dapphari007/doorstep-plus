@@ -30,7 +30,8 @@ Reply with ONLY a JSON object, no prose, matching this TypeScript type:
   "caption": string,          // <= 12 words, present tense, e.g. "Delivery driver leaving a box on the step"
   "details": string,          // 1-2 sentences with useful specifics (where the package is, what the person is doing)
   "actors": { "role": "delivery_person" | "person" | "child" | "group" | "unclear", "action": string }[],
-  "atDoor": boolean,          // true if a person is at or walking up to the door; false if only passing in the background (street, sidewalk)
+  "atDoor": boolean,
+  "motion": "arriving" | "leaving" | "passing" | "staying" | "none",   // movement across the frames; "none" if only one frame or nothing moves          // true if a person is at or walking up to the door; false if only passing in the background (street, sidewalk)
   "package": { "present": boolean, "action": "dropped_off" | "picked_up" | "present" | "none" | "unclear" },
   "vehicle": { "present": boolean, "kind"?: string },   // kind like "delivery van", "car", "truck"
   "carrierGuess"?: string,    // only from visible uniform/van branding, e.g. "UPS"; omit otherwise
@@ -52,8 +53,11 @@ function extractJson(text: string): unknown {
 }
 
 export interface DescribeInput {
+  /** The latest frame. */
   image: Buffer
   mediaType: 'image/jpeg' | 'image/png'
+  /** Earlier frames from the same moment, oldest first, about a second apart. */
+  earlier?: Buffer[]
   /** Ring's own hints, e.g. "motion" / "package_delivery". Helps, never overrides the image. */
   ringHint?: string
   /** Used only in fixture mode to pick a canned scene. */
@@ -63,7 +67,7 @@ export interface DescribeInput {
 type Turn = {
   role: 'user' | 'assistant'
   text: string
-  image?: { bytes: Buffer; mediaType: 'image/jpeg' | 'image/png' }
+  images?: { bytes: Buffer; mediaType: 'image/jpeg' | 'image/png' }[]
 }
 
 /** Claude models go through Anthropic's Bedrock Mantle client. */
@@ -77,14 +81,10 @@ async function askClaude(turns: Turn[]): Promise<string> {
     messages: turns.map((t) => ({
       role: t.role,
       content: [
-        ...(t.image
-          ? [
-              {
-                type: 'image',
-                source: { type: 'base64', media_type: t.image.mediaType, data: t.image.bytes.toString('base64') },
-              },
-            ]
-          : []),
+        ...(t.images ?? []).map((img) => ({
+          type: 'image',
+          source: { type: 'base64', media_type: img.mediaType, data: img.bytes.toString('base64') },
+        })),
         { type: 'text', text: t.text },
       ],
     })),
@@ -109,16 +109,12 @@ async function askConverse(turns: Turn[]): Promise<string> {
       messages: turns.map((t) => ({
         role: t.role,
         content: [
-          ...(t.image
-            ? [
-                {
-                  image: {
-                    format: t.image.mediaType === 'image/png' ? ('png' as const) : ('jpeg' as const),
-                    source: { bytes: t.image.bytes },
-                  },
-                },
-              ]
-            : []),
+          ...(t.images ?? []).map((img) => ({
+            image: {
+              format: img.mediaType === 'image/png' ? ('png' as const) : ('jpeg' as const),
+              source: { bytes: img.bytes },
+            },
+          })),
           { text: t.text },
         ],
       })),
@@ -150,13 +146,19 @@ export async function describeFrame(input: DescribeInput): Promise<Perception> {
   }
 
   const ask = isClaudeModel(config.aws.perceptionModel) ? askClaude : askConverse
+  const frames = [...(input.earlier ?? []), input.image].map((bytes) => ({ bytes, mediaType: input.mediaType }))
+  const instruction =
+    frames.length > 1
+      ? `You get ${frames.length} frames from the doorbell's live video, about a second apart, oldest first. ` +
+        'Describe the LAST frame exactly as you would a single frame: check every part of it, especially packages. ' +
+        'Use the earlier frames ONLY to set "motion" (arriving, leaving or passing by). ' +
+        'If the frames look the same or only something tiny moved, motion is "staying" (something is there) or "none" (nothing is there).'
+      : 'Describe the frame.'
   const turns: Turn[] = [
     {
       role: 'user',
-      image: { bytes: input.image, mediaType: input.mediaType },
-      text: input.ringHint
-        ? `Ring reported this event as: ${input.ringHint}. Describe the frame.`
-        : 'Describe the frame.',
+      images: frames,
+      text: input.ringHint ? `Ring reported this event as: ${input.ringHint}. ${instruction}` : instruction,
     },
   ]
 

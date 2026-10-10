@@ -12,6 +12,7 @@ export const PerceptionSchema = z.object({
   details: z.string().max(400),
   actors: z.array(ActorSchema).max(6),
   atDoor: z.boolean().optional(),
+  motion: z.enum(['arriving', 'leaving', 'passing', 'staying', 'none']).optional(),
   package: z.object({
     present: z.boolean(),
     action: z.enum(['dropped_off', 'picked_up', 'present', 'none', 'unclear']),
