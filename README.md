@@ -83,14 +83,10 @@ npm run dev
 
 ### Storage
 
-Without `DDB_TABLE` / `S3_BUCKET`, data lives in `.data/`. To use AWS:
+Without `DDB_TABLE` / `S3_BUCKET`, data lives in `.data/`. To use AWS (pay-per-request table, private encrypted bucket):
 
 ```bash
-aws dynamodb create-table --table-name doorstep-copilot \
-  --attribute-definitions AttributeName=pk,AttributeType=S AttributeName=sk,AttributeType=S \
-  --key-schema AttributeName=pk,KeyType=HASH AttributeName=sk,KeyType=RANGE \
-  --billing-mode PAY_PER_REQUEST
-aws s3 mb s3://<your-bucket>
+./scripts/setup-aws.sh us-east-1   # prints the two lines to add to .env.local
 ```
 
 ### Smart lights (optional)
