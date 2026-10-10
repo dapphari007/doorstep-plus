@@ -1,5 +1,5 @@
 // Full results report: perception on real Ring frames (+ harder variants), the
-// Recall agent on a fixed history, and the safety layer. Calls Bedrock.
+// Ask agent on a fixed history, and the safety layer. Calls Bedrock.
 // Run: npm run eval:report   -> writes docs/results.md and docs/results.json
 import { mkdtempSync, readFileSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
@@ -127,9 +127,9 @@ describe('results report', () => {
     }
     const frames = await pool(jobs, 4)
 
-    // 2. Recall agent on a fixed history
+    // 2. Ask agent on a fixed history
     const { getStore } = await import('@/lib/store')
-    const { askRecall } = await import('@/lib/agent/recall')
+    const { askDoor } = await import('@/lib/agent/ask')
     const store = getStore()
     const now = Date.now()
     const base: ModelPerception = {
@@ -204,15 +204,15 @@ describe('results report', () => {
         report: true,
       },
     ]
-    const recall = []
+    const ask = []
     for (const item of QUESTIONS) {
       const started = Date.now()
       try {
-        const a = await askRecall(item.q)
+        const a = await askDoor(item.q)
         const textOk = item.must.every((re) => re.test(a.answer))
         const citesOk = item.cites.every((id) => a.eventIds.includes(id))
         const reportOk = !item.report || !!a.report
-        recall.push({
+        ask.push({
           question: item.q,
           answer: a.answer,
           pass: textOk && citesOk && reportOk,
@@ -222,7 +222,7 @@ describe('results report', () => {
           latencyMs: Date.now() - started,
         })
       } catch (err) {
-        recall.push({
+        ask.push({
           question: item.q,
           answer: String(err),
           pass: false,
@@ -269,13 +269,13 @@ describe('results report', () => {
       },
     )
 
-    writeReport({ frames, recall, safety, clean, model: config.aws.perceptionModel, agentModel: config.aws.agentModel })
+    writeReport({ frames, ask, safety, clean, model: config.aws.perceptionModel, agentModel: config.aws.agentModel })
   }, 900_000)
 })
 
 function writeReport(r: {
   frames: FrameResult[]
-  recall: any[]
+  ask: any[]
   safety: any[]
   clean: any[]
   model: string
@@ -305,7 +305,7 @@ function writeReport(r: {
     `| Harder variants: honest (correct, or clearly unsure) | **${pct(hard.filter((f) => f.honest).length, hard.length)}** |`,
     `| People described as animals | **${peopleAsAnimals}** |`,
     `| Time per frame (median / 95th percentile) | ${(percentile(lat, 0.5) / 1000).toFixed(1)} s / ${(percentile(lat, 0.95) / 1000).toFixed(1)} s |`,
-    `| Ask: questions answered correctly | **${r.recall.filter((x) => x.pass).length}/${r.recall.length}** |`,
+    `| Ask: questions answered correctly | **${r.ask.filter((x) => x.pass).length}/${r.ask.length}** |`,
     `| Safety layer: planted bad captions caught | **${r.safety.filter((x) => x.caught).length}/${r.safety.length}** |`,
     `| Safety layer: clean captions left untouched | ${r.clean.filter((x) => x.untouched).length}/${r.clean.length} |`,
     `| Errors | ${r.frames.length - ok.length} |`,
@@ -332,7 +332,7 @@ function writeReport(r: {
     '',
     '| Question | Pass | Time | Answer |',
     '|---|---|---|---|',
-    ...r.recall.map(
+    ...r.ask.map(
       (x) =>
         `| ${x.question} | ${x.pass ? '✅' : '❌'} | ${(x.latencyMs / 1000).toFixed(1)} s | ${String(x.answer).replace(/\s+/g, ' ').replace(/\|/g, '/').slice(0, 220)} |`,
     ),

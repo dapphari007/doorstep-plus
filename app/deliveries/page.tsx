@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, type FormEvent } from 'react'
 import type { DeliveryRecord, LockState } from '@/lib/types'
 import { EventThumb } from '../components/EventThumb'
@@ -45,7 +46,7 @@ function ParcelBox({ lock, now }: { lock?: LockState; now: number }) {
     setPending(action)
     setMessage(undefined)
     try {
-      await postJson('/api/lock', { action, code })
+      await postJson('/api/parcel-box', { action, code })
       setCode('')
       setMessage({
         tone: 'success',
@@ -117,18 +118,29 @@ function ParcelBox({ lock, now }: { lock?: LockState; now: number }) {
         </Button>
       </form>
 
+      <p className="mt-2 text-xs text-muted">
+        A one-time code is issued when a courier and a package are clearly seen on camera.
+      </p>
+
       <div className="mt-3 flex flex-wrap gap-2">
+        {open && (
+          <Button
+            size="sm"
+            variant="secondary"
+            icon="lock"
+            onClick={() => void act('lock')}
+            loading={pending === 'lock'}
+          >
+            Lock now
+          </Button>
+        )}
         <Button
           size="sm"
           variant="secondary"
-          icon="lock"
-          onClick={() => void act('lock')}
-          loading={pending === 'lock'}
-          disabled={!open}
+          icon="refresh"
+          onClick={() => void act('reset')}
+          loading={pending === 'reset'}
         >
-          Lock now
-        </Button>
-        <Button size="sm" variant="ghost" onClick={() => void act('reset')} loading={pending === 'reset'}>
           Reset simulator
         </Button>
       </div>
@@ -200,7 +212,28 @@ export default function DeliveriesPage() {
             <ExpectedParcels now={now} />
             {loaded && deliveries.length === 0 ? (
               <EmptyState icon="box" title="No packages yet">
-                When a package shows up at your door, it appears here.
+                <p>When a package shows up at your door, it appears here with a photo and time.</p>
+                <ol className="mx-auto mt-3 max-w-xs list-decimal space-y-1 pl-5 text-left">
+                  <li>In the Ring Developer Playground, start the Package simulation.</li>
+                  <li>
+                    On Home, press <strong>Start live view</strong>, then <strong>Describe now</strong> or turn on{' '}
+                    <strong>Keep watching</strong>.
+                  </li>
+                </ol>
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  <Link
+                    href="/#live-heading"
+                    className="inline-flex h-9 items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-on hover:bg-primary-hover"
+                  >
+                    Go to live view
+                  </Link>
+                  <Link
+                    href="/#expected-heading"
+                    className="inline-flex h-9 items-center rounded-full border border-line px-4 text-sm font-semibold hover:bg-subtle"
+                  >
+                    Expect a parcel
+                  </Link>
+                </div>
               </EmptyState>
             ) : (
               <ul className="divide-y divide-line">

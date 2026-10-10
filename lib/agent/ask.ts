@@ -1,4 +1,4 @@
-// Recall: a Strands agent on Bedrock that answers questions about past events.
+// Ask: a Strands agent on Bedrock that answers questions about past events.
 
 import { Agent, BedrockModel, tool } from '@strands-agents/sdk'
 import { z } from 'zod'
@@ -9,12 +9,12 @@ import { localTimeToEpoch } from '../expectations/match'
 import { createExpectation, listExpectations } from '../expectations/service'
 import { buildIncidentReport } from './report'
 
-export interface RecallTurn {
+export interface AskTurn {
   role: 'user' | 'assistant'
   text: string
 }
 
-export interface RecallAnswer {
+export interface AskAnswer {
   answer: string
   /** Events the agent looked at or cited, newest first, for thumbnails. */
   eventIds: string[]
@@ -77,10 +77,10 @@ The resident may be blind, deaf or have low vision, and answers may be read alou
 Current local time: ${localTime(Date.now())} (epoch ms ${Date.now()}).`
 }
 
-export async function askRecall(question: string, history: RecallTurn[] = []): Promise<RecallAnswer> {
+export async function askDoor(question: string, history: AskTurn[] = []): Promise<AskAnswer> {
   const store = getStore()
   const touched = new Set<string>()
-  let report: RecallAnswer['report']
+  let report: AskAnswer['report']
 
   if (config.fixtures || !hasAwsCredentials()) {
     return fixtureAnswer(question, await store.listEvents({ limit: 200 }))
@@ -251,7 +251,7 @@ export async function askRecall(question: string, history: RecallTurn[] = []): P
 }
 
 /** Keyword answer used in FIXTURE_MODE or when AWS credentials are missing. */
-function fixtureAnswer(question: string, events: DoorEvent[]): RecallAnswer {
+function fixtureAnswer(question: string, events: DoorEvent[]): AskAnswer {
   const q = question.toLowerCase()
   let hits = events.filter((e) => e.status === 'described')
   if (/package|deliver|parcel|box/.test(q)) hits = hits.filter((e) => e.perception?.package.present)

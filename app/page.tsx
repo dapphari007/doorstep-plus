@@ -34,7 +34,7 @@ export default function HomePage() {
     setChecking(true)
     setCheckError(undefined)
     try {
-      await postJson('/api/poll', {})
+      await postJson('/api/ring/poll', {})
       await reloadStatus()
     } catch (err) {
       setCheckError(errorMessage(err, 'Could not check Ring'))
@@ -141,7 +141,7 @@ export default function HomePage() {
                   </Button>
                 )}
                 <Link
-                  href="/recall"
+                  href="/ask"
                   className="mt-6 inline-flex items-center gap-1 font-semibold text-primary hover:underline"
                 >
                   Ask about your door's history

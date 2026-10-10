@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
-import type { RecallAnswer, RecallTurn } from '@/lib/agent/recall'
+import type { AskAnswer, AskTurn } from '@/lib/agent/ask'
 import { EventRow } from '../components/EventRow'
 import { Button } from '../components/ui/Button'
 import { Card, Container, PageHeader } from '../components/ui/Card'
@@ -21,9 +21,9 @@ const SUGGESTIONS = [
   'Make an incident report for my missing package',
 ]
 
-interface Turn extends RecallTurn {
+interface Turn extends AskTurn {
   id: number
-  result?: RecallAnswer
+  result?: AskAnswer
 }
 
 function downloadMarkdown(title: string, markdown: string) {
@@ -41,7 +41,7 @@ function downloadMarkdown(title: string, markdown: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-export default function RecallPage() {
+export default function AskPage() {
   const { events, prefs } = useApp()
   const now = useNow(60_000)
   const [turns, setTurns] = useState<Turn[]>([])
@@ -73,7 +73,7 @@ export default function RecallPage() {
     const history = turns.map(({ role, text }) => ({ role, text }))
     setTurns((t) => [...t, { id: nextId.current++, role: 'user', text: question }])
     try {
-      const result = await postJson<RecallAnswer>('/api/recall', { question, history })
+      const result = await postJson<AskAnswer>('/api/ask', { question, history })
       if (!mounted.current) return
       setTurns((t) => [...t, { id: nextId.current++, role: 'assistant', text: result.answer || 'No answer.', result }])
       if (prefs.speak && result.answer) speak(result.answer)

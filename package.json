@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start -p 3000",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.check.json",
     "check:bedrock": "node --env-file-if-exists=.env.local scripts/check-bedrock.mjs",
     "eval": "node --env-file-if-exists=.env.local node_modules/vitest/vitest.mjs run --config vitest.eval.config.ts evals/describe.eval.test.ts",
     "format": "prettier --write app lib tests evals scripts",

@@ -12,7 +12,7 @@ import { Select } from './ui/Select'
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: '/', label: 'Home', icon: 'home' },
-  { href: '/recall', label: 'Ask', icon: 'chat' },
+  { href: '/ask', label: 'Ask', icon: 'chat' },
   { href: '/deliveries', label: 'Deliveries', icon: 'box' },
   { href: '/settings', label: 'Settings', icon: 'settings' },
 ]

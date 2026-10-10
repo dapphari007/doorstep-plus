@@ -9,7 +9,7 @@ Built for the Amazon Developer Hackathon 2026 — **Ring track** (accessibility,
 | | |
 |---|---|
 | 🧏 **Accessible alerts** | Deaf / hard-of-hearing: full-screen colour flashes, vibration and smart-light patterns, each event type with its own rhythm. Blind: every event spoken aloud, `R` repeats. Low vision: extra-large, high-contrast captions. |
-| 🧠 **Recall** | Ask "Did a package arrive, and is it still there?" A Strands agent on Amazon Bedrock searches the described event history and answers with exact times, thumbnails and a downloadable incident report. |
+| 🧠 **Ask** | Ask "Did a package arrive, and is it still there?" A Strands agent on Amazon Bedrock searches the described event history and answers with exact times, thumbnails and a downloadable incident report. |
 | 📦 **Deliveries** | When a courier drops off a package, the footage is checked, a (simulated) parcel box opens for two minutes with a one-time code, and a proof-of-delivery record is kept. If the package is later picked up, you are alerted. |
 | 🛡 **Safe by design** | No face recognition, no licence plates, no identity guesses. A deterministic safety pass edits every AI description before anyone sees or hears it (e.g. a person can never be captioned as an animal) and shows what it changed. |
 
@@ -38,7 +38,7 @@ Browser live view (WHEP) ─► "Describe now" frame ─────┤
                        Store: DynamoDB + S3  (or local files)
               ┌────────────────────┼─────────────────────┐
               ▼                    ▼                     ▼
-     Accessible alerts      Recall agent (Strands     Delivery flow → simulated
+     Accessible alerts      Ask agent (Strands        Delivery flow → simulated
      SSE → flash/vibrate/   + Bedrock, tools over      parcel lock, proof of
      speech/smart light     events & deliveries)       delivery, "taken" alerts
 ```
@@ -60,7 +60,7 @@ Browser live view (WHEP) ─► "Describe now" frame ─────┤
 | Service | Use |
 |---|---|
 | **Amazon Bedrock** — Amazon Nova 2 Lite by default (Converse API); Claude via Anthropic's Bedrock Mantle client | Per-event frame description → structured JSON — [lib/perception/describe.ts](lib/perception/describe.ts) |
-| **Strands Agents SDK** (TypeScript) + **Amazon Bedrock** | Recall agent with 4 tools: `search_events`, `get_event`, `list_deliveries`, `build_incident_report` — [lib/agent/recall.ts](lib/agent/recall.ts) |
+| **Strands Agents SDK** (TypeScript) + **Amazon Bedrock** | Ask agent with 6 tools: `search_events`, `get_event`, `list_deliveries`, `build_incident_report`, `expect_arrival`, `list_expected` — [lib/agent/ask.ts](lib/agent/ask.ts) |
 | **Amazon DynamoDB** | Event, delivery and lock records (single table, `pk`/`sk`) — [lib/store/aws.ts](lib/store/aws.ts) |
 | **Amazon S3** | Snapshot storage — [lib/store/aws.ts](lib/store/aws.ts) |
 
@@ -94,7 +94,7 @@ npm run dev
 2. In the app, go to **Settings**, paste the token, and press **Connect**. (Playground tokens last ~30 minutes; paste a new one when the status turns amber.)
 3. Pick an alert profile in the top bar (try **Deaf / hard of hearing**).
 4. In the Playground, start a **Package**, **Vehicle** or **Motion** live-view simulation. Within a few seconds the event is described and the alert fires. Or press **Start live view** → **Describe what's happening** in the app.
-5. Open **Recall** and ask what happened; open **Deliveries** to see the parcel box and proof of delivery.
+5. Open **Ask** and ask what happened; open **Deliveries** to see the parcel box and proof of delivery.
 
 ### Storage
 

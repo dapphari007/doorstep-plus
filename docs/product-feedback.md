@@ -16,7 +16,7 @@ For each tool: what we used it for, what worked, what needs work, onboarding, wo
 - _TODO: latency per real Ring event, watermark impact._
 
 ## Strands Agents SDK (TypeScript)
-- **Used for:** the Recall agent (4 Zod-typed tools over DynamoDB-backed events).
+- **Used for:** the Ask agent (6 Zod-typed tools over DynamoDB-backed events).
 - **Worked well:** Zod tool definitions; `printer: false` for server use; BedrockModel is a one-liner.
 - _TODO_
 
