@@ -5,7 +5,6 @@ import { StatusDot } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card, Container, PageHeader, SectionTitle } from '../components/ui/Card'
 import { InlineMessage } from '../components/ui/EmptyState'
-import { Icon } from '../components/ui/Icon'
 import { Switch } from '../components/ui/Switch'
 import { useApp } from '../providers/AppProvider'
 import { clockTime, errorMessage, postJson } from '../utils/format'
@@ -255,22 +254,6 @@ export default function SettingsPage() {
               />
             </ul>
           )}
-        </Card>
-
-        <Card className="p-5 sm:p-6" aria-labelledby="privacy-heading">
-          <SectionTitle id="privacy-heading">Privacy</SectionTitle>
-          <ul className="space-y-3">
-            {[
-              'Describes what is happening, never who. No face recognition, no licence plates.',
-              'A safety check edits every AI description before you see or hear it.',
-              'Only reads events after you connect, from devices you share.',
-            ].map((text) => (
-              <li key={text} className="flex gap-3">
-                <Icon name="shield" className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                <span>{text}</span>
-              </li>
-            ))}
-          </ul>
         </Card>
       </div>
     </Container>
