@@ -13,10 +13,6 @@ export function visibleEvents(events: DoorEvent[]): DoorEvent[] {
   return events.filter(isVisible)
 }
 
-export function latestDescribed(events: DoorEvent[]): DoorEvent | undefined {
-  return events.find((e) => e.status === 'described' && !e.repeatOf && e.perception?.category !== 'no_activity')
-}
-
 export function groupByDay(events: DoorEvent[], now = Date.now()): { day: string; events: DoorEvent[] }[] {
   const groups: { day: string; events: DoorEvent[] }[] = []
   for (const e of events) {

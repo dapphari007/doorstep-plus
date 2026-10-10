@@ -4,13 +4,12 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { EventRow } from './components/EventRow'
 import { LiveViewCard } from './components/LiveViewCard'
-import { NowHero } from './components/NowCard'
 import { Button } from './components/ui/Button'
-import { Container, SectionTitle } from './components/ui/Card'
+import { Container, PageHeader, SectionTitle } from './components/ui/Card'
 import { EmptyState } from './components/ui/EmptyState'
 import { useNow } from './hooks/useNow'
 import { useApp } from './providers/AppProvider'
-import { groupByDay, latestDescribed, visibleEvents } from './utils/feed'
+import { groupByDay, visibleEvents } from './utils/feed'
 import { errorMessage, postJson } from './utils/format'
 import { PROFILES } from './utils/profiles'
 
@@ -24,7 +23,6 @@ export default function HomePage() {
   const [checkError, setCheckError] = useState<string>()
 
   const feed = useMemo(() => visibleEvents(events), [events])
-  const latest = useMemo(() => latestDescribed(events), [events])
   const groups = useMemo(() => groupByDay(feed.slice(0, shown), now), [feed, shown, now])
 
   const ringConnected = !!status?.ring.connected
@@ -45,9 +43,8 @@ export default function HomePage() {
 
   return (
     <>
-      <NowHero event={latest} now={now} />
-
       <Container>
+        <PageHeader title="Front door" />
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] xl:gap-16">
           <section aria-labelledby="live-heading" className="min-w-0">
             <LiveViewCard ringConnected={ringConnected} fixtures={fixtures} />

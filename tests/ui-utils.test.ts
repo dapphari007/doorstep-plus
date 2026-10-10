@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupByDay, isVisible, latestDescribed, shouldAlert } from '@/app/utils/feed'
+import { groupByDay, isVisible, shouldAlert } from '@/app/utils/feed'
 import { errorMessage, relativeTime, secondsLeft } from '@/app/utils/format'
 import { isAlertPrefs, isProfileId } from '@/app/utils/profiles'
 import type { DoorEvent } from '@/lib/types'
@@ -43,12 +43,6 @@ describe('feed', () => {
     const quiet = { ...ev('x', NOW).perception!, category: 'no_activity' as const }
     expect(isVisible(ev('f', NOW, { perception: quiet }))).toBe(false)
     expect(isVisible(ev('g', NOW, { source: 'history', ringType: 'motion', perception: quiet }))).toBe(true)
-  })
-
-  it('skips quiet scenes and repeats when picking the latest event', () => {
-    const quiet = ev('q', NOW, { perception: { ...ev('x', NOW).perception!, category: 'no_activity' } })
-    expect(latestDescribed([quiet, ev('r', NOW - 1, { repeatOf: 'p' }), ev('p', NOW - 2)])?.id).toBe('p')
-    expect(latestDescribed([quiet])).toBeUndefined()
   })
 
   it('groups by day in order', () => {

@@ -41,7 +41,6 @@ function ProfileSelect({ compact = false }: { compact?: boolean }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname()
-  const { connected } = useApp()
 
   return (
     <div className="min-h-screen">
@@ -77,13 +76,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </nav>
 
             <div className="ml-auto flex items-center gap-5">
-              <span className="hidden flex-col items-center gap-0.5 text-xs text-muted sm:flex" role="status">
-                <span
-                  aria-hidden="true"
-                  className={`h-2.5 w-2.5 rounded-full ${connected ? 'bg-success' : 'bg-warning'}`}
-                />
-                {connected ? 'Live' : 'Offline'}
-              </span>
               <span className="hidden sm:block">
                 <ProfileSelect />
               </span>
