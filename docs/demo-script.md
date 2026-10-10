@@ -1,15 +1,28 @@
-# Demo video script (target 2:50)
+# Demo video script (target 2:45, hard limit 3:00)
 
-Judges may not run the app, so the video is the product. Lead with the strongest moment.
+Judges may only watch the video, so lead with the strongest moment and keep every claim visible on screen. Use real Ring Playground data only (no test mode).
 
-| Time | Screen | Voice-over |
+## Before recording
+1. `npm run build && npm start` (hides the Next.js dev badge). Clear old demo data first.
+2. Generate a fresh Playground token and connect it in Settings.
+3. Browser at 1280×800 or larger; turn on sound for the Blind part.
+4. Settings → "This device" name: e.g. Asha.
+
+## Script
+
+| Time | On screen | Say |
 |---|---|---|
-| 0:00–0:15 | Black screen, then the Doorstep page with the Deaf profile selected | "A doorbell that only beeps and buzzes a phone is useless if you can't hear it or can't see the screen. Ring owners also tell us alerts are noisy, AI captions have mislabelled people, and search is paywalled." |
-| 0:15–0:55 | Split view: Ring Developer Playground on the left, Doorstep+ on the right. Start the **Package** simulation. | "This is a real Ring Partner API device in Ring's Playground. When the courier arrives, Doorstep+ pulls the snapshot, a vision model on Amazon Bedrock describes what's happening, never who, and the whole room flashes amber twice: that rhythm means 'delivery'." Show the big caption card. |
-| 0:55–1:20 | Switch profile to **Blind**. Start the **Motion** simulation. | Let the spoken alert play. Press **R** to repeat it. "Every event is spoken, and the same patterns can drive a real smart light." |
-| 1:20–1:40 | Settings → hover the 🛡 safety notes on an event | "A deterministic safety layer edits every description before anyone hears it. No faces, no licence plates, and a person can never be described as an animal." |
-| 1:40–2:10 | **Ask**: "Did a package arrive today, and is it still there?" Then "Make an incident report for it." | "Ask is a Strands agent on Bedrock with tools over the event history. It answers with exact times and builds a carrier-ready report." Click Download. |
-| 2:10–2:35 | **Deliveries** page | "A verified courier opens the parcel box for two minutes with a one-time code. This lock is simulated, because Ring's API is read-only, but the proof-of-delivery chain is real Ring footage." |
-| 2:35–2:50 | Architecture diagram from the README | "Ring Partner API, Bedrock, Strands, DynamoDB and S3. Built for everyone at the door." |
+| 0:00–0:15 | Home, profile set to **Deaf or hard of hearing** | "A doorbell that only chimes and buzzes a phone doesn't work if you can't hear it or aren't looking at the screen. Doorstep+ makes a Ring doorbell understandable for everyone in the house." |
+| 0:15–0:30 | On Home, **Expecting someone? → Add → A parcel → Any time today** | "I'm expecting a parcel today, so I tell the app." |
+| 0:30–1:05 | Split screen: Ring Playground starts the **Package** simulation; Doorstep+ **Start live view** + **Keep watching** | "This is the real Ring Partner API, on Ring's Playground doorbell. The moment a package appears, the whole screen flashes amber twice — that rhythm means delivery — and the card says 'Package on the step, possibly your parcel'." Open **Deliveries** to show the photo and time. |
+| 1:05–1:30 | Switch profile to **Blind**; Playground **Motion** simulation | Let the spoken alert play: "Animal. Birds feeding at the feeder." Press **R** to repeat. "Every alert can be read aloud." |
+| 1:30–1:50 | Playground **Vehicle** simulation | "A car driving through the lot is understood as passing by, and logged without an alert. Fewer false alerts — the top complaint from Ring owners." Show it in Activity with the **Vehicles** filter. |
+| 1:50–2:15 | **Ask**: "Did my parcel arrive, and is it still there?", then "Make an incident report for it" | "Ask is a Strands agent on Amazon Bedrock. It answers from the history with exact times, and makes a report I can send to a carrier." Click **Download report**. |
+| 2:15–2:35 | README **Results** table | "It describes what is happening, never who. A safety layer means a person is never called an animal, and dark frames say 'too dark to see' instead of guessing. Measured on real Ring frames: twelve out of twelve correct." |
+| 2:35–2:45 | Architecture diagram | "Ring Partner API, Amazon Bedrock, Strands, DynamoDB and S3. Doorstep+: your Ring doorbell, understood by everyone." |
 
-Recording tips: 1080p, hide the Next.js dev badge (`npm run build && npm start`), clear `.data/` first, generate a fresh Playground token right before recording.
+## Tips
+- Upload to YouTube as **Public**, in English, under 3 minutes. Don't use copyrighted music.
+- If a live step fails while recording, cut and retry that segment rather than narrating over an error.
+- Keep the Playground and app side by side so judges see the Ring source and the result together.
+- The Vehicle and Package moments depend on the Playground clips; check them once before recording, since the motion wording ("passing by") has not yet been confirmed on the live Vehicle clip.
