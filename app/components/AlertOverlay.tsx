@@ -49,6 +49,21 @@ function describeAlert(alert: NonNullable<ReturnType<typeof useApp>['alert']>): 
       at: alert.event.start,
     }
   }
+  if (alert.camera) {
+    const { name, online, at } = alert.camera
+    const caption = online ? `${name} is back online` : `${name} camera went offline`
+    return {
+      key: alert.key,
+      pattern: PATTERNS[online ? 'online' : 'offline'],
+      icon: 'video',
+      caption,
+      spoken: online
+        ? `${caption}.`
+        : `Camera offline. ${caption}. Doorbell alerts from it will not arrive until it is back.`,
+      at,
+      quiet: online,
+    }
+  }
   if (alert.delivery) {
     const caption = 'A package was picked up from your door'
     return {

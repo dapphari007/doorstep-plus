@@ -57,3 +57,16 @@ describe('camera views in a scene', () => {
     expect(sceneLines(e)).toEqual(['Car crossing the lot (view: parking lot)', 'Car driving past (view: driveway)'])
   })
 })
+
+describe('camera online and offline', () => {
+  it('reads Ring device webhooks', () => {
+    const evt = parseRingWebhook({ data: { type: 'device_offline', attributes: { source: 'door', timestamp: 5 } } })
+    expect(evt).toMatchObject({ type: 'device_offline', deviceId: 'door', timestamp: 5 })
+  })
+
+  it('makes going offline an alert and coming back a quiet notice', async () => {
+    const { isSilent } = await import('@/lib/alerts')
+    expect(isSilent('offline')).toBe(false)
+    expect(isSilent('online')).toBe(true)
+  })
+})

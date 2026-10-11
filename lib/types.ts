@@ -83,3 +83,12 @@ export type BusMessage =
   | { kind: 'lock'; lock: LockState }
   | { kind: 'expectation'; expectation: Expectation }
   | { kind: 'status'; status: Record<string, unknown> }
+  | { kind: 'camera'; camera: CameraChange }
+
+/** A camera going offline or coming back. */
+export interface CameraChange {
+  deviceId: string
+  name: string
+  online: boolean
+  at: number
+}

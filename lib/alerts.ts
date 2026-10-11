@@ -13,6 +13,8 @@ export type AlertKind =
   | 'package_taken'
   | 'passing'
   | 'parked'
+  | 'offline'
+  | 'online'
   | 'quiet'
 
 export interface AlertPattern {
@@ -59,6 +61,14 @@ export const PATTERNS: Record<AlertKind, AlertPattern> = {
   },
   passing: { kind: 'passing', label: 'Passing by', rhythm: [], color: '#64748b', icon: '🚶' },
   parked: { kind: 'parked', label: 'Parked vehicle', rhythm: [], color: '#64748b', icon: '🅿️' },
+  offline: {
+    kind: 'offline',
+    label: 'Camera offline',
+    rhythm: [150, 100, 150, 100, 800],
+    color: '#ef4444',
+    icon: '📵',
+  },
+  online: { kind: 'online', label: 'Camera back online', rhythm: [], color: '#22c55e', icon: '✅' },
   quiet: { kind: 'quiet', label: 'No activity', rhythm: [], color: '#64748b', icon: '·' },
 }
 

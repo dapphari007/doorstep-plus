@@ -12,6 +12,8 @@ const ICONS: Record<AlertKind, IconName> = {
   package_taken: 'box',
   passing: 'person',
   parked: 'car',
+  offline: 'video',
+  online: 'video',
   quiet: 'door',
 }
 

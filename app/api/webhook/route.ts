@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { config } from '@/lib/config'
 import { processRingEvent } from '@/lib/pipeline'
-import { motionDetectionOn } from '@/lib/ring/client'
+import { publish } from '@/lib/bus'
+import { listDevices, motionDetectionOn } from '@/lib/ring/client'
 import { parseRingWebhook, verifyRingSignature } from '@/lib/ring/webhook'
 import { blockedInDemo } from '@/lib/demo'
 
@@ -39,6 +40,18 @@ export async function POST(req: NextRequest) {
       start: evt.timestamp,
       source: 'webhook',
     }).catch((err) => console.warn('[webhook] processing failed:', err))
+  }
+  if ((evt.type === 'device_online' || evt.type === 'device_offline') && evt.deviceId) {
+    const devices = await listDevices().catch(() => [])
+    publish({
+      kind: 'camera',
+      camera: {
+        deviceId: evt.deviceId,
+        name: devices.find((d) => d.id === evt.deviceId)?.name ?? 'Your camera',
+        online: evt.type === 'device_online',
+        at: evt.timestamp,
+      },
+    })
   }
   return NextResponse.json({ status: 'accepted' })
 }
