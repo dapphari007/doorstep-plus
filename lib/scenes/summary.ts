@@ -9,7 +9,7 @@ import { getStore } from '../store'
 import type { DoorEvent } from '../types'
 
 /** A scene with no new frames for this long is over. */
-export const SCENE_QUIET_MS = 20_000
+export const SCENE_QUIET_MS = 45_000
 const OPEN_SCENE_LOOKBACK_MS = 10 * 60_000
 
 const g = globalThis as unknown as { sceneTimers?: Map<string, ReturnType<typeof setTimeout>>; closing?: Set<string> }

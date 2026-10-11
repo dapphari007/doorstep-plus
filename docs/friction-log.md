@@ -85,4 +85,29 @@ Entries marked *(to verify)* were found in docs or code and still need confirmin
 - **Actual:** `POST /media/image/download` returns `303`. With `redirect: 'manual'` (needed so the token isn't forwarded, see entry 7), a status check of the form `res.ok` treats it as a failure. We shipped that bug once.
 - **Suggestion:** Show a full request/redirect/download code sample in the docs, in JavaScript as well as Python.
 
+## 11. A Playground token is tied to one browser tab, then locked for 30 minutes — 🟠
+
+- **Task:** Record a demo: generate a token, use it in our app, and switch simulations in the Playground while the app streams.
+- **Steps:**
+  1. Generated a token in a Playground tab and pasted it into our app.
+  2. The tab closed (browser restart while recording).
+  3. Opened the Playground again in a new tab.
+- **Expected:** Either the same token, or a way to start a new one.
+- **Actual:** "You have an active token. For security, it is not displayed. You can generate a new token in 28 minutes." Step 3 (Simulate live view event) stays locked ("Generate a token to get started"), so the simulation can't be switched for up to 30 minutes, even though our app is still connected with that token. We lost about an hour of recording time to this across two attempts.
+- **Workaround:** Keep the generating tab open for the whole session; never restart that browser.
+- **Suggestion:** Let a signed-in developer revoke the active token and generate a new one, or unlock simulation switching for any tab of the same account.
+
+## 12. History events don't say which camera module they came from — 🟡
+
+- **Task:** Support multi-camera devices (Ring Elite) in the history poller, as described in Multi-Camera Devices.
+- **Actual:** Motion webhooks carry `component_ids`, but Event History items don't. The docs also say image downloads must name a component on multi-camera devices, so a poller has to guess which module to download from.
+- **Workaround:** Default to the first module in `components.items` for history events; use `component_ids` when a webhook provides it.
+- **Suggestion:** Add `component_ids` to Event History items, matching the webhook payload.
+
+## 13. Privacy zones are device-level, but apply to only one camera module — 🟡
+
+- **Actual:** On multi-camera devices, `privacy_zones` in the device-level configuration belongs to the first module only, and the per-component configuration returns identity metadata only. An app that masks privacy zones before computer vision (as the docs ask) can't mask the other views correctly.
+- **Workaround:** Apply zones only to the module named by `motion_detection.component_id`, and none to the others.
+- **Suggestion:** Return privacy zones per component.
+
 <!-- Add entries from live Playground testing below: task, steps, expected vs actual, severity, workaround, suggestion. -->

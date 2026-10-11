@@ -201,7 +201,10 @@ export async function processLiveFrame(args: {
   }
   const done = await finish(event)
   if (done.status === 'described' && !done.repeatOf) {
-    void closeOpenScenes(done.id).catch((err) => console.warn('[pipeline] closing scenes failed:', err))
+    // A moment of empty view (a camera cut, the car between two views) doesn't end the story;
+    // only a different scene does, or the quiet timer.
+    if (done.perception?.category !== 'no_activity')
+      void closeOpenScenes(done.id).catch((err) => console.warn('[pipeline] closing scenes failed:', err))
     touchScene(done.id)
   }
   return done
