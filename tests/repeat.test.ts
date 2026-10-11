@@ -24,4 +24,14 @@ describe('sceneSignature', () => {
     expect(sceneSignature({ ...base, actors: [{ role: 'person', action: 'walking' }] })).not.toBe(sceneSignature(base))
     expect(sceneSignature({ ...base, package: { present: true, action: 'picked_up' } })).not.toBe(sceneSignature(base))
   })
+  it('treats one bird and several birds as the same scene', () => {
+    const bird: Perception['actors'][number] = { role: 'unclear', action: 'eating' }
+    const birds: Perception = {
+      ...base,
+      category: 'animal',
+      package: { present: false, action: 'none' },
+      actors: [bird],
+    }
+    expect(sceneSignature({ ...birds, actors: [bird, bird] })).toBe(sceneSignature(birds))
+  })
 })

@@ -21,11 +21,19 @@ export const REPEAT_WINDOW_MS = 90_000
 
 /** What has to change for a frame to count as news. */
 export function sceneSignature(p: Perception): string {
-  const roles = p.actors
-    .map((a) => a.role)
+  // "A bird" and "two birds" are the same scene.
+  const roles = Array.from(new Set(p.actors.map((a) => a.role)))
     .sort()
     .join(',')
   return [p.category, p.package.present, p.package.action, p.vehicle.present, roles, p.motion ?? 'none'].join('|')
+}
+
+/** A vehicle moving through the view is one scene, even as its motion changes frame to frame. */
+export function sameScene(a: Perception, b: Perception): boolean {
+  if (sceneSignature(a) === sceneSignature(b)) return true
+  const vehicleOnly = (p: Perception) =>
+    p.category === 'vehicle' && p.vehicle.present && !p.actors.length && !p.package.present
+  return vehicleOnly(a) && vehicleOnly(b)
 }
 
 /** Failed events are retried on later polls, but not forever. */
@@ -63,6 +71,18 @@ async function fetchSnapshot(e: IncomingRingEvent) {
   }
 }
 
+/** Live view sessions show up in Ring's history as on_demand events. */
+const SESSION_SLACK_MS = 5000
+const SESSION_MAX_MS = 5 * 60_000
+
+/** The latest frame we described live during this Ring session, if any. */
+export async function liveSessionFrame(e: IncomingRingEvent): Promise<DoorEvent | undefined> {
+  if (e.ringType !== 'on_demand' || e.source === 'live_frame') return undefined
+  const until = (e.end && e.end > e.start ? e.end : e.start + SESSION_MAX_MS) + SESSION_SLACK_MS
+  const frames = await getStore().listEvents({ since: e.start - SESSION_SLACK_MS, until, limit: 50 })
+  return frames.find((f) => f.source === 'live_frame' && f.status === 'described' && f.perception)
+}
+
 /** Describe an event from Ring (history poll or webhook). Safe to call twice for one id. */
 export async function processRingEvent(incoming: IncomingRingEvent): Promise<DoorEvent> {
   const store = getStore()
@@ -75,6 +95,14 @@ export async function processRingEvent(incoming: IncomingRingEvent): Promise<Doo
     hasSnapshot: false,
     attempts: (existing?.attempts ?? 0) + 1,
     createdAt: existing?.createdAt ?? Date.now(),
+  }
+  const live = await liveSessionFrame(incoming)
+  if (live) {
+    // Our own live view already described this session; keep one row and one alert.
+    event.status = 'described'
+    event.perception = live.perception
+    event.repeatOf = live.repeatOf ?? live.id
+    return finish(event)
   }
   await save(event)
 
@@ -139,15 +167,39 @@ export async function processLiveFrame(args: {
     })
     event.status = 'described'
     const recent = await getStore().listEvents({ since: now - REPEAT_WINDOW_MS, limit: 20 })
-    const previous = recent.find((e) => e.id !== event.id && e.source === event.source && e.status === 'described')
-    if (previous?.perception && sceneSignature(previous.perception) === sceneSignature(event.perception)) {
+    // Any scene from the last minute and a half counts, so one odd frame can't trigger a second alert.
+    const previous = recent.find(
+      (e) =>
+        e.id !== event.id &&
+        e.source === event.source &&
+        e.status === 'described' &&
+        !e.repeatOf &&
+        !!e.perception &&
+        sameScene(e.perception, event.perception!),
+    )
+    if (previous) {
       event.repeatOf = previous.repeatOf ?? previous.id
+      await mergeIntoOriginal(event)
     }
   } catch (err) {
     event.status = 'error'
     event.error = err instanceof Error ? err.message : String(err)
   }
   return finish(event)
+}
+
+const MAX_UPDATES = 5
+
+/** Adds a repeat's caption to the event that alerted, so the row tells the whole story. */
+async function mergeIntoOriginal(repeat: DoorEvent) {
+  const store = getStore()
+  const original = repeat.repeatOf && (await store.getEvent(repeat.repeatOf))
+  const caption = repeat.perception?.caption
+  if (!original || !caption) return
+  const captions = [original.perception?.caption, ...(original.updates ?? []).map((u) => u.caption)]
+  if (captions.some((c) => c?.toLowerCase() === caption.toLowerCase())) return
+  original.updates = [...(original.updates ?? []), { at: repeat.start, caption }].slice(-MAX_UPDATES)
+  await save(original)
 }
 
 async function finish(event: DoorEvent): Promise<DoorEvent> {

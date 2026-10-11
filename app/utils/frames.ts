@@ -8,6 +8,9 @@ const THUMB_H = 18
 /** Mean brightness difference (0-255) above which two thumbnails count as changed. */
 export const CHANGE_THRESHOLD = 6
 
+/** A difference this large means a different scene (the camera view cut), not movement in it. */
+export const SCENE_CUT_THRESHOLD = 35
+
 export interface Frame {
   dataUrl: string
   thumb: Uint8Array
@@ -25,6 +28,11 @@ export function frameDifference(a: Uint8Array, b: Uint8Array): number {
 export function hasChanged(frames: Uint8Array[], reference: Uint8Array | undefined, threshold = CHANGE_THRESHOLD) {
   if (!reference) return true
   return frames.some((f) => frameDifference(f, reference) >= threshold)
+}
+
+/** True if the picture cut to a different scene since the reference. */
+export function isSceneCut(frame: Uint8Array, reference: Uint8Array | undefined) {
+  return !!reference && frameDifference(frame, reference) >= SCENE_CUT_THRESHOLD
 }
 
 function grayscaleThumb(source: CanvasImageSource): Uint8Array {

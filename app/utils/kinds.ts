@@ -11,6 +11,7 @@ const ICONS: Record<AlertKind, IconName> = {
   urgent: 'alert',
   package_taken: 'box',
   passing: 'person',
+  parked: 'car',
   quiet: 'door',
 }
 

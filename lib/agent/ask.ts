@@ -111,7 +111,7 @@ export async function askDoor(question: string, history: AskTurn[] = []): Promis
     }),
     callback: async (input) => {
       const since = input.within_hours ? Date.now() - input.within_hours * 3600_000 : input.since_ms
-      let events = await store.listEvents({ since, until: input.until_ms, limit: 500 })
+      let events = (await store.listEvents({ since, until: input.until_ms, limit: 500 })).filter(isAnswerable)
       if (input.categories?.length)
         events = events.filter((e) => e.perception && input.categories!.includes(e.perception.category))
       if (input.package_filter === 'package_seen') events = events.filter((e) => e.perception?.package.present)
@@ -252,6 +252,12 @@ export async function askDoor(question: string, history: AskTurn[] = []): Promis
 }
 
 /** Keyword answer used in FIXTURE_MODE or when AWS credentials are missing. */
+/** Repeats, failed frames and empty live frames only add noise to answers. */
+function isAnswerable(e: DoorEvent): boolean {
+  if (e.repeatOf || e.status !== 'described') return false
+  return !(e.source === 'live_frame' && e.perception?.category === 'no_activity')
+}
+
 function fixtureAnswer(question: string, events: DoorEvent[]): AskAnswer {
   const q = question.toLowerCase()
   let hits = events.filter((e) => e.status === 'described')

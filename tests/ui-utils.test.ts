@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupByDay, isVisible, shouldAlert } from '@/app/utils/feed'
+import { groupByDay, isVisible, replacesAlert, shouldAlert } from '@/app/utils/feed'
 import { errorMessage, relativeTime, secondsLeft } from '@/app/utils/format'
 import { isAlertPrefs, isProfileId } from '@/app/utils/profiles'
 import type { DoorEvent } from '@/lib/types'
@@ -127,5 +127,31 @@ describe('activity filters', () => {
     const { windowLabel } = await import('@/app/utils/format')
     expect(windowLabel(NOW, NOW + 3600_000, NOW)).toMatch(/–/)
     expect(windowLabel(NOW - 3600_000, NOW + 14 * 3600_000, NOW)).toBe('Any time today')
+  })
+})
+
+describe('alert on screen', () => {
+  const shown = { id: 'bird', start: 1000, status: 'described' } as DoorEvent
+  it('gives way to a newer scene, even a quiet one', () => {
+    expect(replacesAlert({ id: 'car', start: 2000, status: 'described' } as DoorEvent, shown)).toBe(true)
+  })
+  it('stays for repeats, pending frames and itself', () => {
+    expect(replacesAlert({ id: 'b2', start: 2000, status: 'described', repeatOf: 'bird' } as DoorEvent, shown)).toBe(
+      false,
+    )
+    expect(replacesAlert({ id: 'p', start: 2000, status: 'pending' } as DoorEvent, shown)).toBe(false)
+    expect(replacesAlert(shown, shown)).toBe(false)
+  })
+})
+
+describe('scene cut', () => {
+  it('tells a new camera scene from movement within one', async () => {
+    const { isSceneCut } = await import('@/app/utils/frames')
+    const snow = new Uint8Array(576).fill(220)
+    const birdMoved = snow.map((v, i) => (i < 40 ? 60 : v))
+    const parkingLot = new Uint8Array(576).fill(110)
+    expect(isSceneCut(birdMoved, snow)).toBe(false)
+    expect(isSceneCut(parkingLot, snow)).toBe(true)
+    expect(isSceneCut(parkingLot, undefined)).toBe(false)
   })
 })

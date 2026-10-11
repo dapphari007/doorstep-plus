@@ -25,6 +25,8 @@ export interface DoorEvent {
   deliveryId?: string
   /** Set when a live frame shows the same scene as a recent one: stored, but no new alert. */
   repeatOf?: string
+  /** Later frames of the same scene, merged into this event instead of alerting again. */
+  updates?: { at: number; caption: string }[]
   /** The expected visitor or parcel this event probably is. */
   expectationId?: string
   expectationLabel?: string

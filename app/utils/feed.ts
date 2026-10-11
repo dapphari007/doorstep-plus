@@ -31,6 +31,11 @@ export function shouldAlert(e: DoorEvent, since: number, alreadyAlerted: Set<str
   return ready && !e.repeatOf && !isSilent(alertKindForEvent(e)) && e.createdAt >= since && !alreadyAlerted.has(e.id)
 }
 
+/** A newer, different scene replaces the alert on screen, so it never sits over something else. */
+export function replacesAlert(e: DoorEvent, shown: DoorEvent): boolean {
+  return e.status === 'described' && !e.repeatOf && e.id !== shown.id && e.start > shown.start
+}
+
 export type FeedFilter = 'all' | 'deliveries' | 'people' | 'vehicles' | 'doorbell' | 'expected'
 
 export const FEED_FILTERS: { id: FeedFilter; label: string }[] = [

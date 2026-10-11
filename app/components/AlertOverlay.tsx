@@ -85,7 +85,13 @@ export function AlertOverlay() {
   }
 
   useEffect(() => {
-    if (!alert) return
+    if (!alert) {
+      // Dismissed elsewhere, e.g. the live view cut to a new scene.
+      clearTimers()
+      setFlashOn(false)
+      setShown(undefined)
+      return
+    }
     const item = describeAlert(alert)
     if (!item) return
     last.current = item

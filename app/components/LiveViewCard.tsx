@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DoorEvent } from '@/lib/types'
 import { useLiveStream } from '../hooks/useLiveStream'
 import { errorMessage, postJson } from '../utils/format'
-import { captureBurst, captureFrame, hasChanged } from '../utils/frames'
+import { useApp } from '../providers/AppProvider'
+import { captureBurst, captureFrame, hasChanged, isSceneCut } from '../utils/frames'
 import { Badge } from './ui/Badge'
 import { Button } from './ui/Button'
 import { Card } from './ui/Card'
@@ -22,6 +23,7 @@ const FIXTURE_SCENES = ['package', 'vehicle', 'motion', 'pickup'] as const
 export function LiveViewCard({ ringConnected, fixtures }: { ringConnected: boolean; fixtures: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const { status, error, start, stop } = useLiveStream(videoRef)
+  const { dismissAlert } = useApp()
   const [keepWatching, setKeepWatching] = useState(false)
   const [describing, setDescribing] = useState(false)
   const [message, setMessage] = useState<{ tone: 'success' | 'warning'; text: string }>()
@@ -32,39 +34,46 @@ export function LiveViewCard({ ringConnected, fixtures }: { ringConnected: boole
   const canStream = ringConnected && !fixtures
   const live = status === 'live'
 
-  const describe = useCallback(async (quiet = false) => {
-    if (busy.current) return
-    if (!captureFrame(videoRef.current)) {
-      if (!quiet) setMessage({ tone: 'warning', text: 'Start the live view first, then describe what you see.' })
-      return
-    }
-    busy.current = true
-    setDescribing(true)
-    if (!quiet) setMessage(undefined)
-    try {
-      // A short burst lets the AI see movement: arriving, leaving, passing by.
-      const frames = await captureBurst(videoRef.current)
-      if (!frames.length) throw new Error('The live view stopped')
-      // Keep watching only spends an AI call when the picture changed since the last one.
-      if (
-        quiet &&
-        !hasChanged(
-          frames.map((f) => f.thumb),
-          lastSent.current,
-        )
-      )
+  const describe = useCallback(
+    async (quiet = false) => {
+      if (busy.current) return
+      if (!captureFrame(videoRef.current)) {
+        if (!quiet) setMessage({ tone: 'warning', text: 'Start the live view first, then describe what you see.' })
         return
-      lastSent.current = frames[frames.length - 1].thumb
-      const { event } = await postJson<{ event: DoorEvent }>('/api/describe', { images: frames.map((f) => f.dataUrl) })
-      if (event.status === 'error') throw new Error(event.error || 'Could not describe this frame')
-      if (!quiet) setMessage({ tone: 'success', text: event.perception?.caption ?? 'Described' })
-    } catch (err) {
-      setMessage({ tone: 'warning', text: errorMessage(err, 'Could not describe this frame') })
-    } finally {
-      busy.current = false
-      setDescribing(false)
-    }
-  }, [])
+      }
+      busy.current = true
+      setDescribing(true)
+      if (!quiet) setMessage(undefined)
+      try {
+        // A short burst lets the AI see movement: arriving, leaving, passing by.
+        const frames = await captureBurst(videoRef.current)
+        if (!frames.length) throw new Error('The live view stopped')
+        // Keep watching only spends an AI call when the picture changed since the last one.
+        if (
+          quiet &&
+          !hasChanged(
+            frames.map((f) => f.thumb),
+            lastSent.current,
+          )
+        )
+          return
+        // A new scene makes the alert on screen out of date, so clear it before describing.
+        if (isSceneCut(frames[0].thumb, lastSent.current)) dismissAlert()
+        lastSent.current = frames[frames.length - 1].thumb
+        const { event } = await postJson<{ event: DoorEvent }>('/api/describe', {
+          images: frames.map((f) => f.dataUrl),
+        })
+        if (event.status === 'error') throw new Error(event.error || 'Could not describe this frame')
+        if (!quiet) setMessage({ tone: 'success', text: event.perception?.caption ?? 'Described' })
+      } catch (err) {
+        setMessage({ tone: 'warning', text: errorMessage(err, 'Could not describe this frame') })
+      } finally {
+        busy.current = false
+        setDescribing(false)
+      }
+    },
+    [dismissAlert],
+  )
 
   const simulate = async (scene: (typeof FIXTURE_SCENES)[number]) => {
     if (busy.current) return

@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { BusMessage, DeliveryRecord, DoorEvent, Expectation, LockState } from '@/lib/types'
 import { useStatus, type AppStatus } from '../hooks/useStatus'
-import { shouldAlert } from '../utils/feed'
+import { replacesAlert, shouldAlert } from '../utils/feed'
 import { fetchJson } from '../utils/format'
 import {
   PROFILES,
@@ -118,6 +118,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (shouldAlert(msg.event, openedAt.current - 5000, alerted.current)) {
         alerted.current.add(msg.event.id)
         setAlert({ key: msg.event.id, event: msg.event })
+      } else {
+        setAlert((a) => (a?.event && !a.key.startsWith('preview') && replacesAlert(msg.event, a.event) ? undefined : a))
       }
     } else if (msg.kind === 'delivery') {
       setDeliveries((list) => upsert(list, msg.delivery, (d) => d.at))

@@ -30,8 +30,8 @@ Reply with ONLY a JSON object, no prose, matching this TypeScript type:
   "caption": string,          // <= 12 words, present tense, e.g. "Delivery driver leaving a box on the step"
   "details": string,          // 1-2 sentences with useful specifics (where the package is, what the person is doing)
   "actors": { "role": "delivery_person" | "person" | "child" | "group" | "unclear", "action": string }[],
-  "atDoor": boolean,
-  "motion": "arriving" | "leaving" | "passing" | "staying" | "none",   // movement across the frames; "none" if only one frame or nothing moves          // true if a person is at or walking up to the door; false if only passing in the background (street, sidewalk)
+  "atDoor": boolean,          // true if a person is at or walking up to the door; false if only passing in the background (street, sidewalk)
+  "motion": "arriving" | "leaving" | "passing" | "staying" | "none",   // movement across the frames; arriving/leaving = coming to or going from THIS home's door or driveway; moving through a street or parking lot is "passing"; "none" if only one frame or nothing moves
   "package": { "present": boolean, "action": "dropped_off" | "picked_up" | "present" | "none" | "unclear" },
   "vehicle": { "present": boolean, "kind"?: string },   // kind like "delivery van", "car", "truck"
   "carrierGuess"?: string,    // only from visible uniform/van branding, e.g. "UPS"; omit otherwise
@@ -152,6 +152,9 @@ export async function describeFrame(input: DescribeInput): Promise<Perception> {
       ? `You get ${frames.length} frames from the doorbell's live video, about a second apart, oldest first. ` +
         'Describe the LAST frame exactly as you would a single frame: check every part of it, especially packages. ' +
         'Use the earlier frames ONLY to set "motion" (arriving, leaving or passing by). ' +
+        'A car or person moving through a street or parking lot is "passing", not "arriving". ' +
+        'The caption must match the motion: for "passing" say passing or driving past (e.g. "Car driving past the driveway"), ' +
+        'never "leaving" or "moving away" unless it was parked there and drove off. ' +
         'If the frames look the same or only something tiny moved, motion is "staying" (something is there) or "none" (nothing is there).'
       : 'Describe the frame.'
   const turns: Turn[] = [

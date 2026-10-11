@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import type { AskAnswer, AskTurn } from '@/lib/agent/ask'
+import type { DoorEvent } from '@/lib/types'
 import { EventRow } from '../components/EventRow'
 import { Button } from '../components/ui/Button'
 import { Card, Container, PageHeader } from '../components/ui/Card'
@@ -10,7 +11,8 @@ import { Icon } from '../components/ui/Icon'
 import { Spinner } from '../components/ui/Spinner'
 import { useNow } from '../hooks/useNow'
 import { useApp } from '../providers/AppProvider'
-import { errorMessage, postJson } from '../utils/format'
+import { isVisible } from '../utils/feed'
+import { dayLabel, errorMessage, postJson } from '../utils/format'
 import { speak } from '../utils/sound'
 
 const MAX_QUESTION = 500
@@ -151,18 +153,7 @@ export default function AskPage() {
                     </Button>
                   )}
                 </div>
-                {!!t.result?.eventIds.length && (
-                  <ul className="divide-y divide-line border-t border-line">
-                    {t.result.eventIds.map((id) => {
-                      const event = byId.get(id)
-                      return event ? (
-                        <li key={id}>
-                          <EventRow event={event} now={now} />
-                        </li>
-                      ) : null
-                    })}
-                  </ul>
-                )}
+                {t.result && <AnswerEvents ids={t.result.eventIds} byId={byId} now={now} />}
               </Card>
             ),
           )}
@@ -215,5 +206,51 @@ export default function AskPage() {
         </form>
       </div>
     </Container>
+  )
+}
+
+const RECENT_COUNT = 3
+
+/** Events behind an answer: the latest few up front, the rest of today and older days folded away. */
+function AnswerEvents({ ids, byId, now }: { ids: string[]; byId: Map<string, DoorEvent>; now: number }) {
+  const events = ids
+    .map((id) => byId.get(id))
+    .filter((e): e is DoorEvent => !!e && isVisible(e))
+    .sort((a, b) => b.start - a.start)
+  if (!events.length) return null
+  const today = events.filter((e) => dayLabel(e.start, now) === 'Today')
+  const recent = today.slice(0, RECENT_COUNT)
+  const earlier = today.slice(RECENT_COUNT)
+  const past = events.filter((e) => dayLabel(e.start, now) !== 'Today')
+  return (
+    <div className="border-t border-line">
+      {recent.length > 0 && <EventList events={recent} now={now} />}
+      <Folded title="Earlier today" events={earlier} now={now} />
+      <Folded title="Past events" events={past} now={now} />
+    </div>
+  )
+}
+
+function EventList({ events, now }: { events: DoorEvent[]; now: number }) {
+  return (
+    <ul className="divide-y divide-line">
+      {events.map((e) => (
+        <li key={e.id}>
+          <EventRow event={e} now={now} />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function Folded({ title, events, now }: { title: string; events: DoorEvent[]; now: number }) {
+  if (!events.length) return null
+  return (
+    <details className="group border-t border-line py-3 first:border-t-0">
+      <summary className="cursor-pointer list-none text-sm font-semibold text-muted hover:text-ink">
+        <span className="inline-block transition-transform group-open:rotate-90">›</span> {title} ({events.length})
+      </summary>
+      <EventList events={events} now={now} />
+    </details>
   )
 }

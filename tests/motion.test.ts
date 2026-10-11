@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { alertKindForEvent } from '@/lib/alerts'
 import type { Perception } from '@/lib/perception/schema'
-import { sceneSignature } from '@/lib/pipeline'
+import { sameScene, sceneSignature } from '@/lib/pipeline'
 import { CHANGE_THRESHOLD, frameDifference, hasChanged } from '@/app/utils/frames'
 
 const car: Perception = {
@@ -69,5 +69,22 @@ describe('change detection', () => {
     expect(hasChanged([flat(100), flat(101)], flat(100))).toBe(false)
     expect(hasChanged([flat(100), flat(100 + CHANGE_THRESHOLD)], flat(100))).toBe(true)
     expect(hasChanged([flat(100)], undefined)).toBe(true)
+  })
+})
+
+describe('one car, one row', () => {
+  it('keeps a car crossing the view as one scene while its motion changes', () => {
+    expect(sameScene({ ...car, motion: 'arriving' }, { ...car, motion: 'passing' })).toBe(true)
+  })
+  it('splits when a person or package shows up', () => {
+    expect(sameScene(car, { ...car, actors: [{ role: 'person', action: 'walking' }] })).toBe(false)
+  })
+})
+
+describe('parked vehicles', () => {
+  it('never alert, but a car arriving home does', () => {
+    expect(alertKindForEvent(event({ ...car, motion: 'none' }))).toBe('parked')
+    expect(alertKindForEvent(event({ ...car, motion: 'staying' }))).toBe('parked')
+    expect(alertKindForEvent(event({ ...car, motion: 'arriving' }))).toBe('vehicle')
   })
 })

@@ -12,6 +12,7 @@ export type AlertKind =
   | 'urgent'
   | 'package_taken'
   | 'passing'
+  | 'parked'
   | 'quiet'
 
 export interface AlertPattern {
@@ -57,6 +58,7 @@ export const PATTERNS: Record<AlertKind, AlertPattern> = {
     icon: '📤',
   },
   passing: { kind: 'passing', label: 'Passing by', rhythm: [], color: '#64748b', icon: '🚶' },
+  parked: { kind: 'parked', label: 'Parked vehicle', rhythm: [], color: '#64748b', icon: '🅿️' },
   quiet: { kind: 'quiet', label: 'No activity', rhythm: [], color: '#64748b', icon: '·' },
 }
 
@@ -90,6 +92,8 @@ export function alertKindForEvent(e: Pick<DoorEvent, 'ringType' | 'perception'>)
   if (!p || p.package.present) return kind
   const justPassing = p.motion === 'passing' || (kind === 'visitor' && p.atDoor === false)
   if ((kind === 'visitor' || kind === 'vehicle') && justPassing) return 'passing'
+  // A vehicle only matters when it comes to or leaves the home; parked cars never alert.
+  if (kind === 'vehicle' && p.motion !== 'arriving' && p.motion !== 'leaving') return 'parked'
   return kind
 }
 
