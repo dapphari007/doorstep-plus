@@ -1,56 +1,71 @@
 # Voice-over script (read it yourself)
 
-Same words as the AI narration in the generated video, so your recording lines up with the same scenes. Target: about 2 minutes 20 seconds of speaking.
+Same words as the AI narration in the demo video, so your recording drops into the same scenes. About 2 minutes 50 seconds of speaking; the video must stay under 3 minutes.
 
 ## How to record
 - Quiet room, phone or laptop mic 15–20 cm from your mouth. Record one block at a time; it's easy to redo a single block.
-- Energy: confident and upbeat, like you're showing a friend something you're proud of. Smile while you talk; it comes through.
-- Speed: about 2.5 words per second. If a block runs long, drop a few words rather than rushing.
+- Energy: confident and upbeat, like showing a friend something you're proud of. Smile while you talk; it comes through.
+- Pause briefly between sentences. The video lines captions and actions up with those pauses.
 - Say the name as **"Doorstep Plus"**.
-- Save each block as its own file named like the block (`01-hook.m4a`, …). They can replace the AI clips one for one.
+- Save each block as its own file named like the block (`01-hook.m4a`, …). They replace the AI clips one for one.
 
 ## Script
 
-### 01 · Title (≈14 s)
-> Yo! Quick question. What good is a doorbell if you can't hear it? For millions of deaf and blind people, a chime and a phone buzz just don't cut it. So I built **Doorstep Plus**. Your Ring doorbell, understood by *everyone* in the house.
+### 01 · Title (≈9 s)
+> Yo! What good is a doorbell you can't hear? Or a camera you can't see? Meet Doorstep Plus. Ring, made for everyone in the house.
 
-*Tip: pause after "can't hear it?" Let the question land.*
+*Tip: Pause after "can't hear?" and "can't see?". Let each question land.*
 
-### 02 · The problem (≈16 s)
-> I dug through hundreds of Ring reviews, and the same pain kept showing up. Alerts are noisy. They only help if you're staring at your phone. An AI caption once called a person an animal. And searching old video is locked behind Premium. **Challenge accepted.**
+### 02 · What reviews say (≈18 s)
+> First, I did my homework. I read Ring reviews on the App Store, Google Play, Trustpilot, Reddit and the Ring Community. Same pain everywhere. Noisy, late alerts. Useless unless you're staring at your phone. Captions that get people wrong. And video search behind a paywall.
 
-*Tip: list the four problems quickly; slow down on "Challenge accepted."*
+*Tip: Rattle off the five sites quickly, then slow down for the four pains.*
 
-### 03 · Setup (≈10 s)
-> Here's the app, running on the **real Ring Partner API** with Ring's Developer Playground doorbell. I switch alerts to deaf or hard of hearing, and tell it I'm expecting a parcel today.
+### 03 · Who gets left out (≈10 s)
+> Annoying for most of us. A locked door for some. Four hundred thirty million people live with disabling hearing loss. Two point two billion have a vision impairment.
 
-### 04 · Live view, the big moment (≈21 s)
-> Now the live view. Doorstep Plus grabs a short burst of frames, sends them to Amazon Bedrock, and gets back what's happening. **Never who.** Boom! The whole screen flashes amber, twice. That rhythm means delivery. And check it out: *possibly your parcel*. No face recognition. Just time, and what the camera sees.
+*Tip: Say the two numbers slowly. They carry the "Potential Impact" score.*
 
-*Tip: say "Boom!" right as the screen flashes.*
+### 04 · The idea (≈14 s)
+> So here's the plan. Ring sees it. Amazon Bedrock describes what's happening, never who. Doorstep Plus tells you your way: a flash, a voice, or a buzz. And it remembers, so you can just ask.
 
-### 05 · Deliveries (≈7 s)
-> Deliveries keeps every package with a photo and the exact time. If someone grabs it later, you get a picked-up alert.
+### 05 · Go live on the Playground (≈13 s)
+> Enough slides, let's go live. This is the Ring Developer Playground, with package, motion and vehicle simulations, on the real Ring Partner API. Grab a token, connect, and there's our doorbell.
 
-### 06 · Blind and low vision (≈11 s)
-> Switch to blind, and every alert talks. Press R and it repeats. Low vision gets big, high contrast text. Same doorbell, three totally different experiences.
+### 06 · Package, the big moment (≈15 s)
+> Deaf profile, parcel expected. Live view sends a burst of frames to Bedrock. Boom! Amber flashes, twice. That rhythm means delivery. Possibly your parcel. No face recognition, just timing and what the camera sees.
 
-### 07 · Movement (≈10 s)
-> It reads movement too. A car just driving past gets logged quietly, with no alert. Fewer false alarms, which is literally the number one Ring complaint.
+*Tip: Say "Boom!" exactly as the screen flashes amber. The video is cut so that the flash comes right after the pause before it.*
 
-### 08 · Ask your door (≈15 s)
-> And you can just ask your door. *Did a package arrive, and is it still there?* A Strands agent on Bedrock digs through the history and answers with exact times. Need proof for the courier? Make an incident report. One click, downloaded.
+### 07 · Motion clip: birds (≈8 s)
+> Switch to the motion clip. Birds! An animal, not an intruder, so you get a soft green blink, not a panic alarm.
 
-### 09 · Results (≈14 s)
-> And I didn't just vibe check it. I measured it on real Ring frames. **Twelve out of twelve** correct. **Zero** people called animals. **Every** planted bad caption caught. And when it's too dark to see, it says so, instead of guessing.
+*Tip: Say "Birds!" with a smile; the green blink appears right there.*
 
-*Tip: punch the numbers.*
+### 08 · Vehicle clip: just passing (≈11 s)
+> Now a car. It reads movement across frames. Driving past the driveway? That's just passing, so it's one quiet row, with no alert. Fewer false alarms.
 
-### 10 · Under the hood (≈15 s)
-> Under the hood: the Ring Partner API, Amazon Bedrock with Nova, Strands Agents, DynamoDB and S3, plus a live serverless demo on Lambda. I even fixed two auth bugs in Amazon's own Ring sample, and opened a pull request.
+### 09 · Deliveries (≈6 s)
+> Every package lands in Deliveries with a photo and the exact time, and you're warned if someone takes it.
 
-### 11 · Outro (≈6 s)
-> **Doorstep Plus.** Because the front door should work for *everyone*. Thanks for watching!
+### 10 · Blind and low vision (≈16 s)
+> Switch to blind, and every alert talks. *[app voice: "Delivery. Package on step in snow. Possibly your Amazon parcel. 11:13 AM."]* Low vision gets big, high contrast text. Same doorbell, three different experiences.
+
+*Tip: Stop after "every alert talks." The app's own voice (a second, female voice) reads the alert. Keep that clip, then carry on.*
+
+### 11 · Ask your door (≈12 s)
+> Or just ask your door. What happened today? A Strands agent on Bedrock searches the history and answers with exact times. Need proof for the courier? One click incident report.
+
+### 12 · Results (≈13 s)
+> And I measured it. On real Ring frames: twelve out of twelve described correctly. Zero people called animals. Every planted bad caption caught. Too dark? It says so, instead of guessing.
+
+*Tip: Punch the numbers.*
+
+### 13 · Under the hood (≈18 s)
+> Under the hood: Ring's Partner API for events, snapshots and live video, with signed webhooks for real homes. Bedrock with Nova, a Strands agent, DynamoDB, S3, and a serverless demo on Lambda. Plus a pull request fixing two auth bugs in Amazon's Ring sample.
+
+### 14 · Outro (≈8 s)
+> Built to ship in the Ring Appstore, for any Ring doorbell. Doorstep Plus. The front door, for everyone. Peace!
 
 ## Swapping in your voice
-Put your files in `doorstep-video/audio/` with the same names (any format ffmpeg reads) and re-run the build step; the video timing follows the audio lengths automatically.
+Put your files in `doorstep-video/audio/` with the same names (any format ffmpeg reads; for block 10, record only your two lines and keep the app voice clip), then run `node build.mjs` in `doorstep-video`. Timing, captions and the "Boom!" cut follow your audio automatically. If the total goes over 2:58, trim a few words.
