@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { config } from '@/lib/config'
 import { processRingEvent } from '@/lib/pipeline'
+import { motionDetectionOn } from '@/lib/ring/client'
 import { parseRingWebhook, verifyRingSignature } from '@/lib/ring/webhook'
 import { blockedInDemo } from '@/lib/demo'
 
@@ -27,7 +28,8 @@ export async function POST(req: NextRequest) {
     if (seen.size > 2000) seen.delete(seen.values().next().value!)
   }
 
-  if ((evt.type === 'motion_detected' || evt.type === 'button_press') && evt.deviceId) {
+  const motionOff = evt.type === 'motion_detected' && evt.deviceId && !(await motionDetectionOn(evt.deviceId))
+  if ((evt.type === 'motion_detected' || evt.type === 'button_press') && evt.deviceId && !motionOff) {
     void processRingEvent({
       id: `${evt.deviceId}_${evt.type}_${evt.timestamp}`,
       deviceId: evt.deviceId,

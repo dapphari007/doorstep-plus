@@ -4,7 +4,7 @@ import { config, hasRingAuth } from '../config'
 import { MAX_ATTEMPTS, processRingEvent } from '../pipeline'
 import { getStore } from '../store'
 import { hasRuntimeAccessToken } from './auth'
-import { RingApiError, getHistory, listCameras, resolveDeviceId } from './client'
+import { RingApiError, getHistory, listCameras, motionDetectionOn, resolveDeviceId } from './client'
 
 export interface PollerStatus {
   running: boolean
@@ -57,6 +57,7 @@ export async function pollOnce(): Promise<number> {
     const fresh = []
     for (const h of history) {
       if (clearedAt && h.start < clearedAt) continue
+      if (h.eventType === 'motion' && !(await motionDetectionOn(h.deviceId))) continue
       if (state.skipped.has(h.id) || state.inFlight.has(h.id)) continue
       const known = await store.getEvent(h.id)
       if (known && (known.status !== 'error' || (known.attempts ?? 1) >= MAX_ATTEMPTS)) continue

@@ -32,6 +32,12 @@ export interface RingDevice {
   e2eEncrypted: boolean
   /** Camera modules on multi-camera devices (Ring Elite), in physical order; absent on single-camera devices. */
   components?: { id: string; name: string }[]
+  /** Areas the owner wants obscured, in normalized coordinates. */
+  privacyZones?: { x: number; y: number }[][]
+  /** The camera module the device-level zones belong to (multi-camera devices). */
+  zonesComponentId?: string
+  /** False when the owner turned motion detection off. */
+  motionDetection?: boolean
 }
 
 /** One view the app can watch: a device, or one camera module of a multi-camera device. */
@@ -80,6 +86,16 @@ async function ringFetch(path: string, init: RequestInit = {}): Promise<Response
   )
 }
 
+function zonesOf(raw: unknown): { x: number; y: number }[][] | undefined {
+  if (!Array.isArray(raw) || !raw.length) return undefined
+  return raw
+    .map((z: any) => (Array.isArray(z?.vertices) ? z.vertices : []))
+    .map((vs: any[]) =>
+      vs.map((v) => ({ x: Number(v.x), y: Number(v.y) })).filter((v) => isFinite(v.x) && isFinite(v.y)),
+    )
+    .filter((vs) => vs.length >= 3)
+}
+
 export async function listDevices(): Promise<RingDevice[]> {
   const res = await ringFetch('/v1/devices?include=status,capabilities,configurations')
   const body = await res.json()
@@ -100,14 +116,17 @@ export async function listDevices(): Promise<RingDevice[]> {
       id: d.id,
       name: d.attributes?.name || d.attributes?.description || 'Ring device',
       online: status?.attributes?.online ?? d.attributes?.online ?? false,
-      e2eEncrypted: !!conf?.attributes?.e2e_encryption?.enabled,
+      e2eEncrypted: conf?.attributes?.e2e_encryption?.enabled === true,
       components: components.length ? components : undefined,
+      privacyZones: zonesOf(conf?.attributes?.image_enhancements?.privacy_zones),
+      zonesComponentId: conf?.attributes?.motion_detection?.component_id ?? undefined,
+      motionDetection: conf?.attributes?.motion_detection?.enabled !== 'off',
     }
   })
 }
 
 let cachedDeviceId: string | undefined
-let cameraCache: { at: number; cameras: RingCamera[] } | undefined
+let cameraCache: { at: number; cameras: RingCamera[]; devices: RingDevice[] } | undefined
 const CAMERA_CACHE_MS = 5 * 60_000
 
 export function cameraKey(deviceId: string, componentId?: string) {
@@ -134,8 +153,41 @@ export async function listCameras(): Promise<RingCamera[]> {
   if (cameraCache && Date.now() - cameraCache.at < CAMERA_CACHE_MS) return cameraCache.cameras
   const all = await listDevices()
   const devices = config.ring.deviceId ? all.filter((d) => d.id === config.ring.deviceId) : all
-  cameraCache = { at: Date.now(), cameras: camerasFromDevices(devices) }
+  cameraCache = { at: Date.now(), cameras: camerasFromDevices(devices), devices }
   return cameraCache.cameras
+}
+
+/**
+ * The privacy zones that apply to one view. Ring reports zones for the device's first camera
+ * module only, so other modules of a multi-camera device get none rather than the wrong ones.
+ */
+export function zonesFor(device: RingDevice | undefined, componentId?: string) {
+  if (!device?.privacyZones) return []
+  const owner = device.zonesComponentId ?? device.components?.[0]?.id
+  if (componentId !== undefined && owner !== undefined && componentId !== owner) return []
+  return device.privacyZones
+}
+
+export async function privacyZonesOf(deviceId: string, componentId?: string) {
+  try {
+    await listCameras()
+    return zonesFor(
+      cameraCache?.devices.find((d) => d.id === deviceId),
+      componentId,
+    )
+  } catch {
+    return []
+  }
+}
+
+/** Motion events from a device whose owner switched motion detection off are not processed. */
+export async function motionDetectionOn(deviceId: string): Promise<boolean> {
+  try {
+    await listCameras()
+    return cameraCache?.devices.find((d) => d.id === deviceId)?.motionDetection !== false
+  } catch {
+    return true
+  }
 }
 
 /** A camera's name from Ring, only worth showing when the home has more than one view. */

@@ -7,7 +7,8 @@ import { handleDeliveryLogic } from './delivery/flow'
 import { applyExpectations } from './expectations/service'
 import { notifyLight } from './notify/light'
 import { describeFrame } from './perception/describe'
-import { RingApiError, cameraNameOf, defaultComponent, downloadSnapshot } from './ring/client'
+import { RingApiError, cameraNameOf, defaultComponent, downloadSnapshot, privacyZonesOf } from './ring/client'
+import { maskPrivacyZones } from './perception/privacy'
 import { closeOpenScenes, touchScene } from './scenes/summary'
 import { getStore } from './store'
 import type { Perception } from './perception/schema'
@@ -114,9 +115,10 @@ export async function processRingEvent(incoming: IncomingRingEvent): Promise<Doo
     let mediaType: 'image/jpeg' | 'image/png' = 'image/jpeg'
     if (!config.fixtures) {
       const snap = await fetchSnapshot(incoming)
-      image = snap.bytes
+      const component = incoming.componentId ?? (await defaultComponent(incoming.deviceId))
+      image = await maskPrivacyZones(snap.bytes, await privacyZonesOf(incoming.deviceId, component))
       mediaType = snap.contentType.includes('png') ? 'image/png' : 'image/jpeg'
-      await store.putSnapshot(event.id, snap.bytes, snap.contentType)
+      await store.putSnapshot(event.id, image, snap.contentType)
       event.hasSnapshot = true
     }
     event.perception = await describeFrame({
@@ -148,6 +150,10 @@ export async function processLiveFrame(args: {
   hint?: string
 }): Promise<DoorEvent> {
   const now = Date.now()
+  // Privacy zones are blacked out before the frames are stored or described.
+  const zones = config.fixtures ? [] : await privacyZonesOf(args.deviceId, args.componentId)
+  const image = await maskPrivacyZones(args.image, zones)
+  const earlier = await Promise.all((args.earlier ?? []).map((f) => maskPrivacyZones(f, zones)))
   const event: DoorEvent = {
     id: `live_${now}_${randomUUID().slice(0, 8)}`,
     deviceId: args.deviceId,
@@ -161,12 +167,12 @@ export async function processLiveFrame(args: {
     componentId: args.componentId,
     cameraName: config.fixtures ? undefined : await cameraNameOf(args.deviceId, args.componentId),
   }
-  if (event.hasSnapshot) await getStore().putSnapshot(event.id, args.image, args.mediaType)
+  if (event.hasSnapshot) await getStore().putSnapshot(event.id, image, args.mediaType)
   await save(event)
   try {
     event.perception = await describeFrame({
-      image: args.image,
-      earlier: args.earlier,
+      image,
+      earlier,
       mediaType: args.mediaType,
       ringHint: 'live view',
       fixtureScene: args.hint,
