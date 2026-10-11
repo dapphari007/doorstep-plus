@@ -1,6 +1,7 @@
 // When a scene ends, its merged frames become one sentence: the final word on what happened.
 
 import { BedrockRuntimeClient, ConverseCommand } from '@aws-sdk/client-bedrock-runtime'
+import { alertKindForEvent, isSilent } from '../alerts'
 import { publish } from '../bus'
 import { config } from '../config'
 import { scrubText } from '../perception/safety'
@@ -35,6 +36,17 @@ export function fallbackSummary(captions: string[]): string {
   return `${captions[0]}, then ${rest.charAt(0).toLowerCase()}${rest.slice(1)}`
 }
 
+/**
+ * Passing or parked scenes never alerted, so their summary is the one notification they get.
+ * Alerting scenes only need one when later frames added something; their alert said the rest.
+ * An empty view is not a scene.
+ */
+export function needsSummary(e: DoorEvent): boolean {
+  const kind = alertKindForEvent(e)
+  if (kind === 'quiet') return false
+  return isSilent(kind) || !!e.updates?.length
+}
+
 let runtime: BedrockRuntimeClient | undefined
 
 async function summarize(captions: string[], lines = captions): Promise<string> {
@@ -55,6 +67,7 @@ async function summarize(captions: string[], lines = captions): Promise<string> 
                 '\n\nWrite ONE sentence, at most 12 words, past tense, telling the resident what happened overall; ' +
                 'when the view changes, follow the movement from one place to the next, ' +
                 'e.g. "A car drove through the parking lot and past your driveway." ' +
+                'If the captions only reword the same thing, say it once; never invent movement or places that are not listed. ' +
                 'Say what happened, never who; no guesses about identity. Reply with the sentence only.',
             },
           ],
@@ -78,11 +91,12 @@ export async function closeScene(id: string) {
   try {
     const store = getStore()
     const event = await store.getEvent(id)
-    if (!event || event.summary || !event.updates?.length) return
+    if (!event || event.summary) return
+    if (!needsSummary(event)) return
     const captions = sceneCaptions(event)
     let summary: string
     try {
-      summary = await summarize(captions, sceneLines(event))
+      summary = captions.length < 2 ? captions[0] : await summarize(captions, sceneLines(event))
     } catch (err) {
       console.warn('[scenes] summary failed, using captions:', err)
       summary = fallbackSummary(captions)
@@ -108,7 +122,7 @@ export function touchScene(id: string) {
 export async function closeOpenScenes(exceptId: string) {
   const recent = await getStore().listEvents({ since: Date.now() - OPEN_SCENE_LOOKBACK_MS, limit: 50 })
   const open = recent.filter(
-    (e) => e.id !== exceptId && e.source === 'live_frame' && !e.repeatOf && !e.summary && e.updates?.length,
+    (e) => e.id !== exceptId && e.source === 'live_frame' && !e.repeatOf && !e.summary && e.status === 'described',
   )
   await Promise.all(open.map((e) => closeScene(e.id)))
 }

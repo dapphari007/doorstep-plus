@@ -154,7 +154,7 @@ export async function describeFrame(input: DescribeInput): Promise<Perception> {
         'Describe the LAST frame exactly as you would a single frame: check every part of it, especially packages. ' +
         'Use the earlier frames ONLY to set "motion" (arriving, leaving or passing by). ' +
         'A car or person moving through a street or parking lot is "passing", not "arriving". ' +
-        'The caption must match the motion: for "passing" say passing or driving past (e.g. "Car driving past the driveway"), ' +
+        'The caption must match the motion: for "passing" say passing or driving past, and name the place you actually see in this frame (the same place as "view"), ' +
         'never "leaving" or "moving away" unless it was parked there and drove off. ' +
         'If the frames look the same or only something tiny moved, motion is "staying" (something is there) or "none" (nothing is there).'
       : 'Describe the frame.'

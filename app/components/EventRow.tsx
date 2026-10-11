@@ -15,6 +15,7 @@ export function EventRow({ event, now }: { event: DoorEvent; now: number }) {
         <p className={`line-clamp-2 font-medium ${event.perception && !isSilent(kind.kind) ? '' : 'text-muted'}`}>
           {titleOf(event)}
         </p>
+        <Filmstrip event={event} />
         {!!event.updates?.length && !event.summary && (
           <p className="line-clamp-1 text-sm text-muted">Then: {event.updates[event.updates.length - 1].caption}</p>
         )}
@@ -35,5 +36,24 @@ export function EventRow({ event, now }: { event: DoorEvent; now: number }) {
         </div>
       </div>
     </article>
+  )
+}
+
+/** The later photos of a merged scene, oldest first, next to the main thumbnail. */
+function Filmstrip({ event }: { event: DoorEvent }) {
+  const frames = (event.updates ?? []).filter((u) => u.eventId).slice(-3)
+  if (!frames.length) return null
+  return (
+    <div className="mt-1.5 flex gap-1.5" aria-label={`${frames.length + 1} photos of this scene`}>
+      {frames.map((u) => (
+        <img
+          key={u.eventId}
+          src={`/api/events/${encodeURIComponent(u.eventId!)}/snapshot`}
+          alt={u.view ? `${u.caption} (${u.view})` : u.caption}
+          loading="lazy"
+          className="h-9 w-14 rounded-md bg-subtle object-cover"
+        />
+      ))}
+    </div>
   )
 }

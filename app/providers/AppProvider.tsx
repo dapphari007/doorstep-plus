@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { BusMessage, DeliveryRecord, DoorEvent, Expectation, LockState } from '@/lib/types'
 import { useStatus, type AppStatus } from '../hooks/useStatus'
+import { alertKindForEvent, isSilent } from '@/lib/alerts'
 import { replacesAlert, shouldAlert } from '../utils/feed'
 import { fetchJson } from '../utils/format'
 import {
@@ -118,7 +119,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (msg.kind === 'event') {
       setEvents((list) => upsert(list, msg.event, (e) => e.start))
       const summaryKey = `summary:${msg.event.id}`
-      if (msg.event.summary && msg.event.createdAt >= openedAt.current - 5000 && !alerted.current.has(summaryKey)) {
+      // Scenes that already alerted just get a better title; only quiet scenes notify once at the end.
+      const finalWord = !!msg.event.summary && isSilent(alertKindForEvent(msg.event))
+      if (finalWord && msg.event.createdAt >= openedAt.current - 5000 && !alerted.current.has(summaryKey)) {
         alerted.current.add(summaryKey)
         const item = { key: summaryKey, event: msg.event, summary: true }
         // Never covers a real alert that is still on screen.

@@ -209,17 +209,22 @@ export async function processLiveFrame(args: {
 
 const MAX_UPDATES = 5
 
-/** Adds a repeat's caption to the event that alerted, so the row tells the whole story. */
+/** Adds a repeat's caption and photo to the event that alerted, so the row tells the whole story. */
 async function mergeIntoOriginal(repeat: DoorEvent) {
   const store = getStore()
   const original = repeat.repeatOf && (await store.getEvent(repeat.repeatOf))
   const caption = repeat.perception?.caption
   if (!original || !caption) return
-  const captions = [original.perception?.caption, ...(original.updates ?? []).map((u) => u.caption)]
-  if (captions.some((c) => c?.toLowerCase() === caption.toLowerCase())) return
-  original.updates = [...(original.updates ?? []), { at: repeat.start, caption, view: repeat.perception?.view }].slice(
-    -MAX_UPDATES,
-  )
+  const view = repeat.perception?.view
+  const frames = [
+    { caption: original.perception?.caption, view: original.perception?.view },
+    ...(original.updates ?? []),
+  ]
+  const latest = frames[frames.length - 1]
+  // Same words in the same place is not news; the same words from a new camera view is.
+  if (latest.caption?.toLowerCase() === caption.toLowerCase() && latest.view === view) return
+  const update = { at: repeat.start, caption, view, eventId: repeat.hasSnapshot ? repeat.id : undefined }
+  original.updates = [...(original.updates ?? []), update].slice(-MAX_UPDATES)
   await save(original)
 }
 
