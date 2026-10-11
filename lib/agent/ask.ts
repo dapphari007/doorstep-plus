@@ -40,7 +40,9 @@ function compact(e: DoorEvent) {
     epoch_ms: e.start,
     ring_type: e.ringType,
     category: e.perception?.category ?? 'undescribed',
-    caption: e.perception?.caption ?? e.error ?? 'Not described yet',
+    caption: e.summary ?? e.perception?.caption ?? e.error ?? 'Not described yet',
+    camera: e.cameraName,
+    view: e.perception?.view,
     package: e.perception?.package.action,
     delivery_id: e.deliveryId,
   }

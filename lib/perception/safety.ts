@@ -37,6 +37,11 @@ export const LOW_CONFIDENCE = 0.45
 /** Mean brightness (0-255) below which a frame is too dark to trust. */
 export const DARK_BRIGHTNESS = 45
 
+/** The identity and plate clean-up on its own, for text that isn't a full perception. */
+export function scrubText(text: string): string {
+  return scrub(text, new Set())
+}
+
 function scrub(text: string, notes: Set<string>): string {
   let out = text
   for (const { re, replace } of IDENTITY_RULES) {
@@ -73,6 +78,7 @@ export function applySafety(
   out.details = scrub(out.details, notes)
   out.actors = out.actors.map((a) => ({ ...a, action: scrub(a.action, notes) }))
   if (out.carrierGuess) out.carrierGuess = scrub(out.carrierGuess, notes)
+  if (out.view) out.view = scrub(out.view, notes)
 
   // People are never described as animals.
   const hasPeople =

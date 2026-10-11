@@ -15,12 +15,18 @@ export function EventRow({ event, now }: { event: DoorEvent; now: number }) {
         <p className={`line-clamp-2 font-medium ${event.perception && !isSilent(kind.kind) ? '' : 'text-muted'}`}>
           {titleOf(event)}
         </p>
-        {!!event.updates?.length && (
+        {!!event.updates?.length && !event.summary && (
           <p className="line-clamp-1 text-sm text-muted">Then: {event.updates[event.updates.length - 1].caption}</p>
         )}
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
           {event.status === 'pending' && <Spinner className="h-3 w-3" />}
           <span>{kind.label}</span>
+          {event.cameraName && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>{event.cameraName}</span>
+            </>
+          )}
           <span aria-hidden="true">·</span>
           <time dateTime={new Date(event.start).toISOString()}>{relativeTime(event.start, now)}</time>
           {event.source === 'fixture' && <Badge tone="warning">Test data</Badge>}

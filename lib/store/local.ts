@@ -10,6 +10,7 @@ interface Db {
   deliveries: Record<string, DeliveryRecord>
   expectations?: Record<string, Expectation>
   lock?: LockState
+  activityClearedAt?: number
 }
 
 function safeName(id: string) {
@@ -74,6 +75,21 @@ export class LocalStore implements Store {
   }
   async listDeliveries(limit = 100) {
     return filterAndSort(Object.values(this.db.deliveries), { limit })
+  }
+  async clearActivity() {
+    const removed =
+      Object.keys(this.db.events).length +
+      Object.keys(this.db.deliveries).length +
+      Object.keys(this.db.expectations ?? {}).length
+    this.db.events = {}
+    this.db.deliveries = {}
+    this.db.expectations = {}
+    this.db.activityClearedAt = Date.now()
+    await this.persist()
+    return removed
+  }
+  async getActivityClearedAt() {
+    return this.db.activityClearedAt
   }
   async getLock() {
     return this.db.lock

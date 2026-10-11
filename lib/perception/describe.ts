@@ -32,6 +32,7 @@ Reply with ONLY a JSON object, no prose, matching this TypeScript type:
   "actors": { "role": "delivery_person" | "person" | "child" | "group" | "unclear", "action": string }[],
   "atDoor": boolean,          // true if a person is at or walking up to the door; false if only passing in the background (street, sidewalk)
   "motion": "arriving" | "leaving" | "passing" | "staying" | "none",   // movement across the frames; arriving/leaving = coming to or going from THIS home's door or driveway; moving through a street or parking lot is "passing"; "none" if only one frame or nothing moves
+  "view": string,             // 1-3 words naming the place this camera shows, e.g. "front step", "driveway", "parking lot"
   "package": { "present": boolean, "action": "dropped_off" | "picked_up" | "present" | "none" | "unclear" },
   "vehicle": { "present": boolean, "kind"?: string },   // kind like "delivery van", "car", "truck"
   "carrierGuess"?: string,    // only from visible uniform/van branding, e.g. "UPS"; omit otherwise

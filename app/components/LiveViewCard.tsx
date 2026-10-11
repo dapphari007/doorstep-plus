@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DoorEvent } from '@/lib/types'
-import { useLiveStream } from '../hooks/useLiveStream'
+import type { RingCamera } from '@/lib/ring/client'
+import { useLiveStream, type CameraTarget } from '../hooks/useLiveStream'
 import { errorMessage, postJson } from '../utils/format'
 import { useApp } from '../providers/AppProvider'
 import { captureBurst, captureFrame, hasChanged, isSceneCut } from '../utils/frames'
@@ -12,6 +13,7 @@ import { Button } from './ui/Button'
 import { Card } from './ui/Card'
 import { InlineMessage } from './ui/EmptyState'
 import { Icon } from './ui/Icon'
+import { Select } from './ui/Select'
 import { Spinner } from './ui/Spinner'
 import { Switch } from './ui/Switch'
 
@@ -22,17 +24,44 @@ const FIXTURE_SCENES = ['package', 'vehicle', 'motion', 'pickup'] as const
 
 export function LiveViewCard({ ringConnected, fixtures }: { ringConnected: boolean; fixtures: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const { status, error, start, stop } = useLiveStream(videoRef)
+  const [cameras, setCameras] = useState<RingCamera[]>([])
+  const [cameraKey, setCameraKey] = useState<string>()
+  const camera = cameras.find((c) => c.key === cameraKey) ?? cameras.find((c) => !c.encrypted)
+  const target = camera && { deviceId: camera.deviceId, componentId: camera.componentId }
+  const { status, error, start, stop } = useLiveStream(videoRef, target)
   const { dismissAlert } = useApp()
   const [keepWatching, setKeepWatching] = useState(false)
   const [describing, setDescribing] = useState(false)
   const [message, setMessage] = useState<{ tone: 'success' | 'warning'; text: string }>()
   const busy = useRef(false)
+  const cameraRef = useRef<CameraTarget>()
   const lastSent = useRef<Uint8Array>()
   const retries = useRef(0)
 
   const canStream = ringConnected && !fixtures
   const live = status === 'live'
+  cameraRef.current = target
+
+  // The cameras on this Ring account; the picker only appears when there is more than one.
+  useEffect(() => {
+    if (!canStream) return
+    let cancelled = false
+    fetch('/api/ring/devices')
+      .then((r) => r.json())
+      .then((body: { cameras?: RingCamera[] }) => {
+        if (!cancelled && body.cameras) setCameras(body.cameras)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [canStream])
+
+  const switchCamera = (key: string) => {
+    stop()
+    lastSent.current = undefined
+    setCameraKey(key)
+  }
 
   const describe = useCallback(
     async (quiet = false) => {
@@ -61,6 +90,7 @@ export function LiveViewCard({ ringConnected, fixtures }: { ringConnected: boole
         if (isSceneCut(frames[0].thumb, lastSent.current)) dismissAlert()
         lastSent.current = frames[frames.length - 1].thumb
         const { event } = await postJson<{ event: DoorEvent }>('/api/describe', {
+          ...cameraRef.current,
           images: frames.map((f) => f.dataUrl),
         })
         if (event.status === 'error') throw new Error(event.error || 'Could not describe this frame')
@@ -168,6 +198,20 @@ export function LiveViewCard({ ringConnected, fixtures }: { ringConnected: boole
             Live view
           </h2>
           {fixtures && <Badge tone="warning">Test mode</Badge>}
+          {cameras.length > 1 && (
+            <Select
+              aria-label="Camera"
+              value={camera?.key}
+              onChange={(e) => switchCamera(e.target.value)}
+              className="min-w-0 max-w-[60%]"
+            >
+              {cameras.map((c) => (
+                <option key={c.key} value={c.key} disabled={c.encrypted}>
+                  {c.encrypted ? `${c.name} (end-to-end encrypted)` : c.name}
+                </option>
+              ))}
+            </Select>
+          )}
         </div>
 
         {!ringConnected && !fixtures ? (

@@ -10,7 +10,15 @@ const STALL_MS = 3500
 const CONNECT_TIMEOUT_MS = 20_000
 const ICE_WAIT_MS = 3000
 
-export function useLiveStream(videoRef: RefObject<HTMLVideoElement>) {
+export interface CameraTarget {
+  deviceId: string
+  componentId?: string
+}
+
+/** camera: which view to stream; the server picks the first device when it's left out. */
+export function useLiveStream(videoRef: RefObject<HTMLVideoElement>, camera?: CameraTarget) {
+  const cameraRef = useRef(camera)
+  cameraRef.current = camera
   const [status, setStatus] = useState<StreamStatus>('idle')
   const [error, setError] = useState<string>()
   const pcRef = useRef<RTCPeerConnection | null>(null)
@@ -99,7 +107,7 @@ export function useLiveStream(videoRef: RefObject<HTMLVideoElement>) {
 
       const { sdpAnswer, sessionUrl } = await postJson<{ sdpAnswer: string; sessionUrl: string | null }>(
         '/api/ring/stream',
-        { sdpOffer: pc.localDescription?.sdp },
+        { sdpOffer: pc.localDescription?.sdp, ...cameraRef.current },
       )
       sessionUrlRef.current = sessionUrl
       if (stale()) return teardown()

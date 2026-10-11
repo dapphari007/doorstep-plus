@@ -7,7 +7,8 @@ import { handleDeliveryLogic } from './delivery/flow'
 import { applyExpectations } from './expectations/service'
 import { notifyLight } from './notify/light'
 import { describeFrame } from './perception/describe'
-import { RingApiError, downloadSnapshot } from './ring/client'
+import { RingApiError, cameraNameOf, defaultComponent, downloadSnapshot } from './ring/client'
+import { closeOpenScenes, touchScene } from './scenes/summary'
 import { getStore } from './store'
 import type { Perception } from './perception/schema'
 import type { DoorEvent, EventSource } from './types'
@@ -44,6 +45,7 @@ export interface IncomingRingEvent {
   deviceId: string
   ringType: string
   subType?: string
+  componentId?: string
   start: number
   end?: number
   source: EventSource
@@ -58,7 +60,7 @@ async function fetchSnapshot(e: IncomingRingEvent) {
   const window = e.end && e.end > e.start ? { start: e.start, end: e.end } : { start: e.start + 1500 }
   for (let attempt = 0; ; attempt++) {
     try {
-      return await downloadSnapshot(e.deviceId, window)
+      return await downloadSnapshot(e.deviceId, window, e.componentId ?? (await defaultComponent(e.deviceId)))
     } catch (err) {
       const retryable = err instanceof RingApiError && (err.mediaMayAppear || err.status === 429)
       if (!retryable || attempt >= MEDIA_RETRY_DELAYS_MS.length) throw err
@@ -95,6 +97,7 @@ export async function processRingEvent(incoming: IncomingRingEvent): Promise<Doo
     hasSnapshot: false,
     attempts: (existing?.attempts ?? 0) + 1,
     createdAt: existing?.createdAt ?? Date.now(),
+    cameraName: await cameraNameOf(incoming.deviceId, incoming.componentId),
   }
   const live = await liveSessionFrame(incoming)
   if (live) {
@@ -136,6 +139,7 @@ export async function processRingEvent(incoming: IncomingRingEvent): Promise<Doo
 /** Describe a frame grabbed from the live WHEP stream in the browser. */
 export async function processLiveFrame(args: {
   deviceId: string
+  componentId?: string
   /** The latest frame. */
   image: Buffer
   /** Earlier frames from the same moment, oldest first. */
@@ -154,6 +158,8 @@ export async function processLiveFrame(args: {
     status: 'pending',
     hasSnapshot: args.image.length > 0,
     createdAt: now,
+    componentId: args.componentId,
+    cameraName: config.fixtures ? undefined : await cameraNameOf(args.deviceId, args.componentId),
   }
   if (event.hasSnapshot) await getStore().putSnapshot(event.id, args.image, args.mediaType)
   await save(event)
@@ -174,18 +180,25 @@ export async function processLiveFrame(args: {
         e.source === event.source &&
         e.status === 'described' &&
         !e.repeatOf &&
+        !e.summary &&
         !!e.perception &&
         sameScene(e.perception, event.perception!),
     )
     if (previous) {
       event.repeatOf = previous.repeatOf ?? previous.id
       await mergeIntoOriginal(event)
+      touchScene(event.repeatOf)
     }
   } catch (err) {
     event.status = 'error'
     event.error = err instanceof Error ? err.message : String(err)
   }
-  return finish(event)
+  const done = await finish(event)
+  if (done.status === 'described' && !done.repeatOf) {
+    void closeOpenScenes(done.id).catch((err) => console.warn('[pipeline] closing scenes failed:', err))
+    touchScene(done.id)
+  }
+  return done
 }
 
 const MAX_UPDATES = 5
@@ -198,7 +211,9 @@ async function mergeIntoOriginal(repeat: DoorEvent) {
   if (!original || !caption) return
   const captions = [original.perception?.caption, ...(original.updates ?? []).map((u) => u.caption)]
   if (captions.some((c) => c?.toLowerCase() === caption.toLowerCase())) return
-  original.updates = [...(original.updates ?? []), { at: repeat.start, caption }].slice(-MAX_UPDATES)
+  original.updates = [...(original.updates ?? []), { at: repeat.start, caption, view: repeat.perception?.view }].slice(
+    -MAX_UPDATES,
+  )
   await save(original)
 }
 

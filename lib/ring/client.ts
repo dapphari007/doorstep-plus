@@ -30,6 +30,17 @@ export interface RingDevice {
   name: string
   online: boolean
   e2eEncrypted: boolean
+  /** Camera modules on multi-camera devices (Ring Elite), in physical order; absent on single-camera devices. */
+  components?: { id: string; name: string }[]
+}
+
+/** One view the app can watch: a device, or one camera module of a multi-camera device. */
+export interface RingCamera {
+  key: string
+  deviceId: string
+  componentId?: string
+  name: string
+  encrypted: boolean
 }
 
 export interface RingHistoryEvent {
@@ -70,7 +81,7 @@ async function ringFetch(path: string, init: RequestInit = {}): Promise<Response
 }
 
 export async function listDevices(): Promise<RingDevice[]> {
-  const res = await ringFetch('/v1/devices?include=status,configurations')
+  const res = await ringFetch('/v1/devices?include=status,capabilities,configurations')
   const body = await res.json()
   const included: any[] = body?.included || []
   return (body?.data || []).map((d: any) => {
@@ -78,16 +89,81 @@ export async function listDevices(): Promise<RingDevice[]> {
     const conf = included.find(
       (i) => i.type === 'device-configurations' && i.id === d.relationships?.configurations?.data?.id,
     )
+    const caps = included.find(
+      (i) => i.type === 'device-capabilities' && i.id === d.relationships?.capabilities?.data?.id,
+    )
+    // component_id is opaque: read it, pass it back unchanged, never generate it.
+    const components = (caps?.attributes?.components?.items ?? [])
+      .filter((c: any) => c.component_type === 'lens' && c.component_id !== undefined)
+      .map((c: any) => ({ id: String(c.component_id), name: c.component_name || String(c.component_id) }))
     return {
       id: d.id,
       name: d.attributes?.name || d.attributes?.description || 'Ring device',
       online: status?.attributes?.online ?? d.attributes?.online ?? false,
       e2eEncrypted: !!conf?.attributes?.e2e_encryption?.enabled,
+      components: components.length ? components : undefined,
     }
   })
 }
 
 let cachedDeviceId: string | undefined
+let cameraCache: { at: number; cameras: RingCamera[] } | undefined
+const CAMERA_CACHE_MS = 5 * 60_000
+
+export function cameraKey(deviceId: string, componentId?: string) {
+  return componentId === undefined ? deviceId : `${deviceId}::${componentId}`
+}
+
+/** Every view on the account: one per device, or one per camera module on multi-camera devices. */
+export function camerasFromDevices(devices: RingDevice[]): RingCamera[] {
+  return devices.flatMap((d) =>
+    d.components
+      ? d.components.map((c) => ({
+          key: cameraKey(d.id, c.id),
+          deviceId: d.id,
+          componentId: c.id,
+          name: `${d.name} · ${c.name}`,
+          encrypted: d.e2eEncrypted,
+        }))
+      : [{ key: d.id, deviceId: d.id, name: d.name, encrypted: d.e2eEncrypted }],
+  )
+}
+
+/** Cameras on the account (or only RING_DEVICE_ID's), cached for a few minutes. */
+export async function listCameras(): Promise<RingCamera[]> {
+  if (cameraCache && Date.now() - cameraCache.at < CAMERA_CACHE_MS) return cameraCache.cameras
+  const all = await listDevices()
+  const devices = config.ring.deviceId ? all.filter((d) => d.id === config.ring.deviceId) : all
+  cameraCache = { at: Date.now(), cameras: camerasFromDevices(devices) }
+  return cameraCache.cameras
+}
+
+/** A camera's name from Ring, only worth showing when the home has more than one view. */
+export function cameraLabel(cameras: RingCamera[], deviceId: string, componentId?: string): string | undefined {
+  if (cameras.length < 2) return undefined
+  const exact = cameras.find((c) => c.key === cameraKey(deviceId, componentId))
+  return exact?.name ?? cameras.find((c) => c.deviceId === deviceId)?.name.split(' · ')[0]
+}
+
+export async function cameraNameOf(deviceId: string, componentId?: string): Promise<string | undefined> {
+  try {
+    return cameraLabel(await listCameras(), deviceId, componentId)
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Multi-camera downloads must name a module; Ring doesn't say which one an event came from in history,
+ * so default to the first in physical order.
+ */
+export async function defaultComponent(deviceId: string): Promise<string | undefined> {
+  try {
+    return (await listCameras()).find((c) => c.deviceId === deviceId)?.componentId
+  } catch {
+    return undefined
+  }
+}
 
 /** The configured device, or the first device on the account (Playground has one DoorbellPro). */
 export async function resolveDeviceId(): Promise<string> {
@@ -118,8 +194,12 @@ export interface Snapshot {
 }
 
 // Media endpoints answer 303 with a pre-signed URL; follow it without our token.
-export async function downloadSnapshot(deviceId: string, window: { start: number; end?: number }): Promise<Snapshot> {
-  const body = window.end
+export async function downloadSnapshot(
+  deviceId: string,
+  window: { start: number; end?: number },
+  componentId?: string,
+): Promise<Snapshot> {
+  const range = window.end
     ? {
         type: 'latest_in_range',
         start_timestamp: window.start,
@@ -127,6 +207,7 @@ export async function downloadSnapshot(deviceId: string, window: { start: number
         image_options: { format: 'jpeg' },
       }
     : { type: 'at_timestamp', timestamp: window.start, image_options: { format: 'jpeg' } }
+  const body = componentId === undefined ? range : { ...range, components: [{ component_id: componentId }] }
 
   const res = await ringFetch(`/v1/devices/${encodeURIComponent(deviceId)}/media/image/download`, {
     method: 'POST',
@@ -178,8 +259,9 @@ async function followMediaRedirect(res: Response): Promise<Snapshot> {
   }
 }
 
-export async function startWhepSession(deviceId: string, sdpOffer: string) {
-  const res = await ringFetch(`/v1/devices/${encodeURIComponent(deviceId)}/media/streaming/whep/sessions`, {
+export async function startWhepSession(deviceId: string, sdpOffer: string, componentId?: string) {
+  const query = componentId === undefined ? '' : `?component_id=${encodeURIComponent(componentId)}`
+  const res = await ringFetch(`/v1/devices/${encodeURIComponent(deviceId)}/media/streaming/whep/sessions${query}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/sdp' },
     body: sdpOffer,

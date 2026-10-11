@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
       deviceId: evt.deviceId,
       ringType: evt.type === 'button_press' ? 'ding' : 'motion',
       subType: evt.subType,
+      componentId: evt.componentIds?.[0],
       start: evt.timestamp,
       source: 'webhook',
     }).catch((err) => console.warn('[webhook] processing failed:', err))

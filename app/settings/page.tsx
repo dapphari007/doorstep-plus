@@ -8,7 +8,7 @@ import { Card, Container, PageHeader, SectionTitle } from '../components/ui/Card
 import { InlineMessage } from '../components/ui/EmptyState'
 import { Switch } from '../components/ui/Switch'
 import { useApp } from '../providers/AppProvider'
-import { clockTime, errorMessage, postJson } from '../utils/format'
+import { clockTime, errorMessage, fetchJson, postJson } from '../utils/format'
 import { PROFILES, readDeviceName, writeDeviceName, type AlertPrefs, type ProfileId } from '../utils/profiles'
 import { chime, speak, vibrate } from '../utils/sound'
 
@@ -152,6 +152,61 @@ function DeviceName() {
   )
 }
 
+/** Deletes the app's activity history after a second, explicit confirmation. */
+function ClearActivity() {
+  const { refresh, status } = useApp()
+  const demo = !!status?.demo
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string }>()
+
+  const clear = async () => {
+    setBusy(true)
+    setMessage(undefined)
+    try {
+      const { removed } = await fetchJson<{ removed: number }>('/api/activity', { method: 'DELETE' })
+      setMessage({ tone: 'success', text: removed ? `Cleared ${removed} items.` : 'Nothing to clear.' })
+      await refresh()
+    } catch (err) {
+      setMessage({ tone: 'danger', text: errorMessage(err, 'Could not clear the history.') })
+    } finally {
+      setBusy(false)
+      setConfirming(false)
+    }
+  }
+
+  return (
+    <Card className="p-5 sm:p-6" aria-labelledby="activity-heading">
+      <SectionTitle id="activity-heading">Your activity</SectionTitle>
+      <p className="text-sm text-muted">
+        Deletes every event, delivery and expected arrival saved by Doorstep. Recordings stay in your Ring account, and
+        older Ring events are not imported again.
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {confirming ? (
+          <>
+            <Button variant="danger" loading={busy} onClick={() => void clear()}>
+              Yes, clear history
+            </Button>
+            <Button variant="secondary" onClick={() => setConfirming(false)} disabled={busy}>
+              Cancel
+            </Button>
+          </>
+        ) : (
+          <Button variant="secondary" onClick={() => setConfirming(true)} disabled={demo}>
+            Clear activity
+          </Button>
+        )}
+      </div>
+      {message && (
+        <div className="mt-3">
+          <InlineMessage tone={message.tone}>{message.text}</InlineMessage>
+        </div>
+      )}
+    </Card>
+  )
+}
+
 export default function SettingsPage() {
   const {
     profile,
@@ -266,6 +321,8 @@ export default function SettingsPage() {
             Browsers only play sound after you've tapped or clicked the page once.
           </p>
         </Card>
+
+        <ClearActivity />
 
         <Card className="p-5 sm:p-6" aria-labelledby="status-heading">
           <SectionTitle id="status-heading">System</SectionTitle>

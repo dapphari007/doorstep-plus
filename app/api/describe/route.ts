@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   const blocked = blockedInDemo()
   if (blocked) return blocked
   try {
-    const { image, images, hint, deviceId } = await req.json()
+    const { image, images, hint, deviceId, componentId } = await req.json()
     const raw: unknown[] = Array.isArray(images) ? images : image ? [image] : []
     if (raw.length > MAX_FRAMES)
       return NextResponse.json({ error: `Send at most ${MAX_FRAMES} frames` }, { status: 400 })
@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
     const latest = ok[ok.length - 1]
     const event = await processLiveFrame({
       deviceId: deviceId || (config.fixtures ? 'fixture-device' : await resolveDeviceId()),
+      componentId: typeof componentId === 'string' ? componentId.slice(0, 40) : undefined,
       image: latest?.bytes ?? Buffer.alloc(0),
       earlier: ok.slice(0, -1).map((f) => f.bytes),
       mediaType: latest?.mediaType ?? 'image/jpeg',

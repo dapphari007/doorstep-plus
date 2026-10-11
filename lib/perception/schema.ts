@@ -13,6 +13,11 @@ export const PerceptionSchema = z.object({
   actors: z.array(ActorSchema).max(6),
   atDoor: z.boolean().optional(),
   motion: z.enum(['arriving', 'leaving', 'passing', 'staying', 'none']).optional(),
+  // A short place name; trimmed rather than rejected when the model is wordy.
+  view: z
+    .string()
+    .transform((v) => v.slice(0, 40))
+    .optional(),
   package: z.object({
     present: z.boolean(),
     action: z.enum(['dropped_off', 'picked_up', 'present', 'none', 'unclear']),

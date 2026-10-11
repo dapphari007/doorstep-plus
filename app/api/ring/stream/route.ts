@@ -7,9 +7,10 @@ export async function POST(req: NextRequest) {
   const blocked = blockedInDemo()
   if (blocked) return blocked
   try {
-    const { sdpOffer, deviceId } = await req.json()
+    const { sdpOffer, deviceId, componentId } = await req.json()
     if (!sdpOffer) return NextResponse.json({ error: 'Missing sdpOffer' }, { status: 400 })
-    return NextResponse.json(await startWhepSession(deviceId || (await resolveDeviceId()), sdpOffer))
+    const component = typeof componentId === 'string' ? componentId.slice(0, 40) : undefined
+    return NextResponse.json(await startWhepSession(deviceId || (await resolveDeviceId()), sdpOffer, component))
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Stream failed' }, { status: 500 })
   }

@@ -19,6 +19,8 @@ export interface AlertItem {
   key: string
   event?: DoorEvent
   delivery?: DeliveryRecord
+  /** The quiet "final update" for a finished scene. */
+  summary?: boolean
 }
 
 interface AppState {
@@ -115,7 +117,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const handleMessage = useCallback((msg: BusMessage) => {
     if (msg.kind === 'event') {
       setEvents((list) => upsert(list, msg.event, (e) => e.start))
-      if (shouldAlert(msg.event, openedAt.current - 5000, alerted.current)) {
+      const summaryKey = `summary:${msg.event.id}`
+      if (msg.event.summary && msg.event.createdAt >= openedAt.current - 5000 && !alerted.current.has(summaryKey)) {
+        alerted.current.add(summaryKey)
+        const item = { key: summaryKey, event: msg.event, summary: true }
+        // Never covers a real alert that is still on screen.
+        setAlert((a) => (a && !a.summary ? a : item))
+      } else if (shouldAlert(msg.event, openedAt.current - 5000, alerted.current)) {
         alerted.current.add(msg.event.id)
         setAlert({ key: msg.event.id, event: msg.event })
       } else {

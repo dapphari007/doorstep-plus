@@ -82,7 +82,7 @@ export function alertKindFor(p: Perception | undefined): AlertKind {
   }
 }
 
-type AlertableEvent = Pick<DoorEvent, 'ringType' | 'perception' | 'start' | 'expectationLabel'>
+type AlertableEvent = Pick<DoorEvent, 'ringType' | 'perception' | 'start' | 'expectationLabel' | 'cameraName'>
 
 /** A doorbell press always alerts; someone only passing in the background never does. */
 export function alertKindForEvent(e: Pick<DoorEvent, 'ringType' | 'perception'>): AlertKind {
@@ -104,7 +104,9 @@ export function isSilent(kind: AlertKind): boolean {
 /** Sentence for screen readers / speech, e.g. "Delivery. A courier leaving a box. Possibly your parcel. 2:14 PM." */
 export function spokenText(e: AlertableEvent, timeZone?: string): string {
   const time = new Date(e.start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone })
-  const parts = [PATTERNS[alertKindForEvent(e)].label]
+  const parts = [
+    e.cameraName ? `${e.cameraName}: ${PATTERNS[alertKindForEvent(e)].label}` : PATTERNS[alertKindForEvent(e)].label,
+  ]
   if (e.perception) parts.push(e.perception.caption)
   if (e.expectationLabel) parts.push(`Possibly ${e.expectationLabel}`)
   parts.push(time)

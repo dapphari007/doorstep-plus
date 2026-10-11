@@ -33,6 +33,7 @@ export function kindOf(event: DoorEvent): EventKind {
 }
 
 export function titleOf(event: DoorEvent): string {
+  if (event.summary) return event.summary
   if (event.perception) return event.perception.caption
   if (event.ringType === 'ding') return 'Someone rang the doorbell'
   if (event.status === 'pending') return 'Looking at what happened…'

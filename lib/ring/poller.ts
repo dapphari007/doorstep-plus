@@ -4,7 +4,7 @@ import { config, hasRingAuth } from '../config'
 import { MAX_ATTEMPTS, processRingEvent } from '../pipeline'
 import { getStore } from '../store'
 import { hasRuntimeAccessToken } from './auth'
-import { RingApiError, getHistory, resolveDeviceId } from './client'
+import { RingApiError, getHistory, listCameras, resolveDeviceId } from './client'
 
 export interface PollerStatus {
   running: boolean
@@ -12,6 +12,7 @@ export interface PollerStatus {
   lastSuccessAt?: number
   lastError?: string
   deviceId?: string
+  cameras?: number
   inFlight: number
 }
 
@@ -44,13 +45,18 @@ export async function pollOnce(): Promise<number> {
     return 0
   }
   try {
-    const deviceId = await resolveDeviceId()
-    state.status.deviceId = deviceId
-    const history = await getHistory(deviceId)
+    // Encrypted devices return unreadable media, so they are skipped rather than retried.
+    const cameras = (await listCameras()).filter((c) => !c.encrypted)
+    const ids = cameras.length ? Array.from(new Set(cameras.map((c) => c.deviceId))) : [await resolveDeviceId()]
+    state.status.deviceId = ids[0]
+    state.status.cameras = cameras.length || 1
+    const history = (await Promise.all(ids.map((id) => getHistory(id)))).flat().sort((a, b) => b.start - a.start)
     const store = getStore()
+    const clearedAt = await store.getActivityClearedAt()
 
     const fresh = []
     for (const h of history) {
+      if (clearedAt && h.start < clearedAt) continue
       if (state.skipped.has(h.id) || state.inFlight.has(h.id)) continue
       const known = await store.getEvent(h.id)
       if (known && (known.status !== 'error' || (known.attempts ?? 1) >= MAX_ATTEMPTS)) continue

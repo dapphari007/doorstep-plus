@@ -24,6 +24,10 @@ export interface Store {
   putExpectation(expectation: Expectation): Promise<void>
   /** Newest window first. */
   listExpectations(limit?: number): Promise<Expectation[]>
+  /** Deletes events, deliveries and expectations and remembers when; returns how many were removed. */
+  clearActivity(): Promise<number>
+  /** Ring events from before this time are not imported again. */
+  getActivityClearedAt(): Promise<number | undefined>
 }
 
 export function filterAndSort<T extends { start?: number; at?: number; from?: number }>(

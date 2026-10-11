@@ -15,6 +15,8 @@ export interface RingWebhookEvent {
   type: string
   subType?: string
   deviceId?: string
+  /** Multi-camera devices: the camera modules that saw the motion. */
+  componentIds?: string[]
   timestamp: number
 }
 
@@ -29,6 +31,7 @@ export function parseRingWebhook(body: any): RingWebhookEvent | null {
     type: data.type,
     subType: attrs.sub_type,
     deviceId: attrs.source,
+    componentIds: Array.isArray(attrs.component_ids) ? attrs.component_ids.map(String) : undefined,
     timestamp: Number.isFinite(ts) ? ts : Date.now(),
   }
 }

@@ -26,7 +26,13 @@ export interface DoorEvent {
   /** Set when a live frame shows the same scene as a recent one: stored, but no new alert. */
   repeatOf?: string
   /** Later frames of the same scene, merged into this event instead of alerting again. */
-  updates?: { at: number; caption: string }[]
+  updates?: { at: number; caption: string; view?: string }[]
+  /** Multi-camera devices: the camera module this came from. */
+  componentId?: string
+  /** The camera's name from Ring, set only when the home has more than one camera. */
+  cameraName?: string
+  /** One sentence for the whole scene, written when it ends (only for scenes with updates). */
+  summary?: string
   /** The expected visitor or parcel this event probably is. */
   expectationId?: string
   expectationLabel?: string

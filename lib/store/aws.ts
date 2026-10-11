@@ -1,7 +1,7 @@
 // DynamoDB for records (pk = kind, sk = id) and S3 for snapshots.
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb'
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb'
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import type { DeliveryRecord, DoorEvent, Expectation, LockState } from '../types'
 import { filterAndSort, type ListOptions, type Store } from './types'
@@ -45,6 +45,40 @@ export class AwsStore implements Store {
       ExclusiveStartKey = res.LastEvaluatedKey
     } while (ExclusiveStartKey && items.length < 2000)
     return items
+  }
+
+  private async keys(pk: string): Promise<string[]> {
+    const keys: string[] = []
+    let ExclusiveStartKey: Record<string, any> | undefined
+    do {
+      const res = await this.ddb.send(
+        new QueryCommand({
+          TableName: this.table,
+          KeyConditionExpression: 'pk = :pk',
+          ExpressionAttributeValues: { ':pk': pk },
+          ProjectionExpression: 'sk',
+          ExclusiveStartKey,
+        }),
+      )
+      for (const i of res.Items || []) keys.push(i.sk)
+      ExclusiveStartKey = res.LastEvaluatedKey
+    } while (ExclusiveStartKey)
+    return keys
+  }
+
+  async clearActivity() {
+    // Mark first, so the poller stops re-importing while the rows are deleted.
+    await this.put('META', 'activity-cleared', { at: Date.now() })
+    let removed = 0
+    for (const pk of ['EVENT', 'DELIVERY', 'EXPECT']) {
+      const sks = await this.keys(pk)
+      await Promise.all(sks.map((sk) => this.ddb.send(new DeleteCommand({ TableName: this.table, Key: { pk, sk } }))))
+      removed += sks.length
+    }
+    return removed
+  }
+  async getActivityClearedAt() {
+    return (await this.get<{ at: number }>('META', 'activity-cleared'))?.at
   }
 
   getEvent(id: string) {

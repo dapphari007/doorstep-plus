@@ -16,9 +16,25 @@ interface Shown {
   expected?: string
   spoken: string
   at: number
+  camera?: string
+  /** No flash, vibration or chime: the final update of a scene. */
+  quiet?: boolean
 }
 
 function describeAlert(alert: NonNullable<ReturnType<typeof useApp>['alert']>): Shown | undefined {
+  if (alert.event && alert.summary && alert.event.summary) {
+    const kind = alertKindForEvent(alert.event)
+    return {
+      key: alert.key,
+      pattern: { ...PATTERNS[kind], label: 'Final update', rhythm: [] },
+      icon: iconFor(kind),
+      caption: alert.event.summary,
+      camera: alert.event.cameraName,
+      spoken: `Final update. ${alert.event.summary}.`,
+      at: alert.event.updates?.at(-1)?.at ?? alert.event.start,
+      quiet: true,
+    }
+  }
   if (alert.event) {
     const kind = alertKindForEvent(alert.event)
     if (isSilent(kind)) return undefined
@@ -27,6 +43,7 @@ function describeAlert(alert: NonNullable<ReturnType<typeof useApp>['alert']>): 
       pattern: PATTERNS[kind],
       icon: iconFor(kind),
       caption: titleOf(alert.event),
+      camera: alert.event.cameraName,
       expected: alert.event.expectationLabel,
       spoken: spokenText(alert.event),
       at: alert.event.start,
@@ -98,10 +115,12 @@ export function AlertOverlay() {
     setPaused(false)
     setShown(item)
     announce(item.spoken)
-    if (prefs.flash) flash(item.pattern.rhythm)
-    if (prefs.vibrate) vibrate([...item.pattern.rhythm, 500, ...item.pattern.rhythm])
     if (prefs.speak) speak(item.spoken)
-    if (prefs.chime) chime()
+    if (!item.quiet) {
+      if (prefs.flash) flash(item.pattern.rhythm)
+      if (prefs.vibrate) vibrate([...item.pattern.rhythm, 500, ...item.pattern.rhythm])
+      if (prefs.chime) chime()
+    }
     // prefs is left out on purpose: changing settings must not replay the last alert.
   }, [alert, flash])
 
@@ -170,7 +189,7 @@ export function AlertOverlay() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-muted">
-                {shown.pattern.label} · {clockTime(shown.at)}
+                {[shown.pattern.label, shown.camera, clockTime(shown.at)].filter(Boolean).join(' · ')}
               </p>
               <p id="alert-caption" className="mt-0.5 text-lg font-semibold leading-snug">
                 {shown.caption}
