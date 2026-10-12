@@ -66,6 +66,6 @@ The project started from Amazon's MIT-licensed sample `AmazonAppDev/ring-api-hel
 - **What, how, why:** Removed `GET /api/ring/token`, which returned the live Ring access token to any caller and was not used by the app; and fixed refresh-token mode so it keeps the rotated refresh token Ring returns on each refresh instead of re-sending the original one. Every developer who starts from Amazon's sample inherits both problems: the first is a token leak, the second breaks long-running integrations about four hours after start. The PR type-checks, builds, and merges cleanly with the other open PRs.
 
 ## Links
-- Demo video (YouTube, public, under 3 minutes): `<add>`
+- Demo video (YouTube, public, under 3 minutes): https://youtu.be/bxtmcnVJbMs
 - GitHub repo: https://github.com/dapphari007/doorstep-plus
 - Read-only live demo (recorded Ring Playground events, serverless on AWS Lambda): https://vgso5tpy4uw5u2a5igztqzc7me0knnxq.lambda-url.us-east-1.on.aws/

@@ -4,6 +4,8 @@
 
 Doorstep+ is an AI layer on top of the [Ring Partner API](https://developer.amazon.com/docs/ring/api-documentation.html). It describes what is happening at the front door (never *who*), tells each resident in the way that works for them — flashes and vibration for deaf residents, voice for blind residents, large high-contrast text for low vision — remembers everything so you can just ask, and keeps track of deliveries.
 
+▶ **[Watch the 3-minute demo](https://youtu.be/bxtmcnVJbMs)**, recorded live on the Ring Developer Playground.
+
 Built for the Amazon Developer Hackathon 2026: **Ring track** (accessibility, IoT home automation, access control) with the **AWS Builder** and **Open Source** mini challenges.
 
 | | |
@@ -17,7 +19,7 @@ Built for the Amazon Developer Hackathon 2026: **Ring track** (accessibility, Io
 
 ## Live demo
 
-**[Try the read-only demo](https://vgso5tpy4uw5u2a5igztqzc7me0knnxq.lambda-url.us-east-1.on.aws/)** — real events recorded from the Ring Developer Playground, with Ask, filters, Deliveries and "Play a sample alert" (try each alert profile). Live view and anything that changes data are turned off, because they need a personal Ring token. The [demo video](#) shows the live Ring flow.
+**[Try the read-only demo](https://vgso5tpy4uw5u2a5igztqzc7me0knnxq.lambda-url.us-east-1.on.aws/)** — real events recorded from the Ring Developer Playground, with Ask, filters, Deliveries and "Play a sample alert" (try each alert profile). Live view and anything that changes data are turned off, because they need a personal Ring token. The [demo video](https://youtu.be/bxtmcnVJbMs) shows the live Ring flow.
 
 It runs serverless on **AWS Lambda** (arm64, container image via the AWS Lambda Web Adapter) behind a Lambda Function URL: it sleeps when nobody visits and costs almost nothing. The function has its own read-only IAM role (read DynamoDB and S3 snapshots, call one Bedrock model), a concurrency cap of 3, and Ask is rate-limited. Update it with `./scripts/deploy-demo.sh`.
 
