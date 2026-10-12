@@ -77,6 +77,20 @@ Live view (WHEP) ─► 3-frame burst, only if changed ──┤
 | **Amazon DynamoDB** | Events, deliveries, expected visitors, parcel box (single table, `pk`/`sk`) — [lib/store/aws.ts](lib/store/aws.ts) |
 | **Amazon S3** | Private, encrypted snapshot storage — [lib/store/aws.ts](lib/store/aws.ts) |
 
+## AWS services used
+
+| Service | What it does in Doorstep+ | Code |
+|---|---|---|
+| **Amazon Bedrock** (Amazon Nova 2 Lite, Converse API) | Describes each Ring snapshot or 3-frame live burst as structured JSON (category, roles, package, vehicle, movement, camera view, confidence); writes the one-sentence final update when a scene ends. Claude on Bedrock is supported through the same adapter. | [`lib/perception/describe.ts`](lib/perception/describe.ts), [`lib/scenes/summary.ts`](lib/scenes/summary.ts) |
+| **Strands Agents SDK** (TypeScript, on Bedrock) | The "Ask your door" agent: Zod-typed tools to search events, get an event, list deliveries, build an incident report, and record or list expected arrivals. | [`lib/agent/ask.ts`](lib/agent/ask.ts) |
+| **Amazon DynamoDB** | One pay-per-request table (pk/sk) for events, deliveries, expected visitors and the simulated parcel box. | [`lib/store/aws.ts`](lib/store/aws.ts), [`scripts/setup-aws.sh`](scripts/setup-aws.sh) |
+| **Amazon S3** | Private, encrypted snapshot storage. Ring privacy zones are blacked out before a frame is stored or sent to Bedrock. | [`lib/store/aws.ts`](lib/store/aws.ts), [`lib/perception/privacy.ts`](lib/perception/privacy.ts) |
+| **AWS Lambda** + **Amazon ECR** | The read-only public demo: a Next.js container (arm64, AWS Lambda Web Adapter) behind a Function URL, reserved concurrency 3. | [`Dockerfile.lambda`](Dockerfile.lambda), [`scripts/deploy-demo.sh`](scripts/deploy-demo.sh) |
+| **AWS IAM** | Least-privilege role for the demo: DynamoDB read, S3 GetObject on snapshots, InvokeModel on one Nova model. | [`scripts/deploy-demo.sh`](scripts/deploy-demo.sh) |
+| **Amazon Polly** | Generative-voice narration for the demo video. | (video tooling, outside the app) |
+
+Set-up: `aws login` (or any AWS credentials), then `./scripts/setup-aws.sh` creates the table and bucket. Without AWS storage the app falls back to a local JSON store; Bedrock is required for descriptions and Ask.
+
 ## Results
 
 Measured with `npm run eval:report` on real Ring Playground frames (3 runs each), plus harder variants generated from them (dim, very dark, blur, low resolution). Full tables in [docs/results.md](docs/results.md).
