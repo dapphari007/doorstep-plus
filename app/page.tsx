@@ -7,7 +7,7 @@ import { EventRow } from './components/EventRow'
 import { ExpectedCard } from './components/ExpectedCard'
 import { LiveViewCard } from './components/LiveViewCard'
 import { Button } from './components/ui/Button'
-import { Container, PageHeader, SectionTitle } from './components/ui/Card'
+import { Card, Container, PageHeader, SectionTitle } from './components/ui/Card'
 import { EmptyState } from './components/ui/EmptyState'
 import { useNow } from './hooks/useNow'
 import { useApp } from './providers/AppProvider'
@@ -50,10 +50,20 @@ export default function HomePage() {
         <PageHeader title="Front door" />
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] xl:gap-16">
           <div className="min-w-0 space-y-6">
-            <section aria-labelledby="live-heading">
-              {status?.demo ? <DemoAlertCard /> : <LiveViewCard ringConnected={ringConnected} fixtures={fixtures} />}
-            </section>
-            <ExpectedCard now={now} />
+            {/* Until the server says whether this is the read-only demo, show neither version. */}
+            {!status ? (
+              <div aria-busy="true" className="space-y-6">
+                <Card className="aspect-[16/12] animate-pulse bg-subtle" />
+                <Card className="h-40 animate-pulse bg-subtle" />
+              </div>
+            ) : (
+              <>
+                <section aria-labelledby="live-heading">
+                  {status.demo ? <DemoAlertCard /> : <LiveViewCard ringConnected={ringConnected} fixtures={fixtures} />}
+                </section>
+                <ExpectedCard now={now} />
+              </>
+            )}
           </div>
 
           <section aria-labelledby="activity-heading" className="min-w-0">
