@@ -129,7 +129,7 @@ Set `LIGHT_WEBHOOK_URL` to any webhook (Home Assistant, IFTTT, …). Each alert 
 ### Checks
 
 ```bash
-npm test               # 59 unit tests: safety, matching, alerts, webhooks, deliveries, feed rules
+npm test               # 85 unit tests: safety, matching, alerts, webhooks, deliveries, scenes, cameras, privacy zones
 npm run typecheck
 npm run eval           # model check on saved Ring frames
 npm run eval:motion    # still scenes must not be reported as moving

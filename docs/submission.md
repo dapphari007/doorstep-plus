@@ -26,7 +26,7 @@ Doorstep+ adds an AI layer to a Ring doorbell so that everyone in a home knows w
 - **Strands Agents SDK (TypeScript):** the Ask agent, with six tools over the history: search events, get event, list deliveries, build incident report, expect arrival, list expected.
 - **Amazon DynamoDB and Amazon S3:** events, deliveries, expected visitors and parcel-box state in one pay-per-request table; snapshots in a private, encrypted bucket. `scripts/setup-aws.sh` creates both.
 - **App:** Next.js and TypeScript, Server-Sent Events for live alerts, a mobile-first accessible UI (keyboard, screen reader announcements, reduced motion).
-- **Quality:** 59 unit tests, and an evaluation report (`npm run eval:report`) on real Ring Playground frames: 12/12 correct, 0 people described as animals, 10/10 planted bad captions caught, 5/5 Ask questions right, median 2.9 s per frame.
+- **Quality:** 85 unit tests, and an evaluation report (`npm run eval:report`) on real Ring Playground frames: 12/12 correct, 0 people described as animals, 10/10 planted bad captions caught, 5/5 Ask questions right, median 2.9 s per frame.
 
 ## Challenges we ran into
 - The Playground sends no motion webhooks, so we poll event history and treat new event ids as triggers.
