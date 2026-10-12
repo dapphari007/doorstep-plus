@@ -86,7 +86,7 @@ Live view (WHEP) ─► 3-frame burst, only if changed ──┤
 | **Amazon DynamoDB** | One pay-per-request table (pk/sk) for events, deliveries, expected visitors and the simulated parcel box. | [`lib/store/aws.ts`](lib/store/aws.ts), [`scripts/setup-aws.sh`](scripts/setup-aws.sh) |
 | **Amazon S3** | Private, encrypted snapshot storage. Ring privacy zones are blacked out before a frame is stored or sent to Bedrock. | [`lib/store/aws.ts`](lib/store/aws.ts), [`lib/perception/privacy.ts`](lib/perception/privacy.ts) |
 | **AWS Lambda** + **Amazon ECR** | The read-only public demo: a Next.js container (arm64, AWS Lambda Web Adapter) behind a Function URL, reserved concurrency 3. | [`Dockerfile.lambda`](Dockerfile.lambda), [`scripts/deploy-demo.sh`](scripts/deploy-demo.sh) |
-| **AWS IAM** | Least-privilege role for the demo: DynamoDB read, S3 GetObject on snapshots, InvokeModel on one Nova model. | [`scripts/deploy-demo.sh`](scripts/deploy-demo.sh) |
+| **AWS IAM** | Least-privilege role for the demo: DynamoDB read, S3 GetObject on snapshots, InvokeModel on one Nova model. | [`docs/aws/demo-lambda-role.md`](docs/aws/demo-lambda-role.md) |
 | **Amazon Polly** | Generative-voice narration for the demo video. | (video tooling, outside the app) |
 
 Set-up: `aws login` (or any AWS credentials), then `./scripts/setup-aws.sh` creates the table and bucket. Without AWS storage the app falls back to a local JSON store; Bedrock is required for descriptions and Ask.
