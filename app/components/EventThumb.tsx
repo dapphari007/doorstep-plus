@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { DoorEvent } from '@/lib/types'
 import { kindOf } from '../utils/kinds'
 import { Icon } from './ui/Icon'
+import { RetryImage } from './ui/RetryImage'
 
 export function EventThumb({ event, className = '' }: { event: DoorEvent; className?: string }) {
   const [failed, setFailed] = useState(false)
@@ -11,11 +12,11 @@ export function EventThumb({ event, className = '' }: { event: DoorEvent; classN
 
   if (event.hasSnapshot && !failed) {
     return (
-      <img
+      <RetryImage
         src={`/api/events/${encodeURIComponent(event.id)}/snapshot`}
         alt={event.perception ? `Snapshot: ${event.perception.caption}` : 'Doorbell snapshot'}
         loading="lazy"
-        onError={() => setFailed(true)}
+        onGiveUp={() => setFailed(true)}
         className={`bg-subtle object-cover ${className}`}
       />
     )

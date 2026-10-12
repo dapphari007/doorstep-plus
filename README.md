@@ -21,7 +21,7 @@ Built for the Amazon Developer Hackathon 2026: **Ring track** (accessibility, Io
 
 **[Try the read-only demo](https://vgso5tpy4uw5u2a5igztqzc7me0knnxq.lambda-url.us-east-1.on.aws/)** — real events recorded from the Ring Developer Playground, with Ask, filters, Deliveries and "Play a sample alert" (try each alert profile). Live view and anything that changes data are turned off, because they need a personal Ring token. The [demo video](https://youtu.be/bxtmcnVJbMs) shows the live Ring flow.
 
-It runs serverless on **AWS Lambda** (arm64, container image via the AWS Lambda Web Adapter) behind a Lambda Function URL: it sleeps when nobody visits and costs almost nothing. The function has its own read-only IAM role (read DynamoDB and S3 snapshots, call one Bedrock model), a concurrency cap of 3, and Ask is rate-limited. Update it with `./scripts/deploy-demo.sh`.
+It runs serverless on **AWS Lambda** (arm64, container image via the AWS Lambda Web Adapter) behind a Lambda Function URL: it sleeps when nobody visits and costs almost nothing. The function has its own read-only IAM role (read DynamoDB and S3 snapshots, call one Bedrock model), a concurrency cap of 20, and Ask is rate-limited. Update it with `./scripts/deploy-demo.sh`.
 
 ## Why
 
@@ -85,7 +85,7 @@ Live view (WHEP) ─► 3-frame burst, only if changed ──┤
 | **Strands Agents SDK** (TypeScript, on Bedrock) | The "Ask your door" agent: Zod-typed tools to search events, get an event, list deliveries, build an incident report, and record or list expected arrivals. | [`lib/agent/ask.ts`](lib/agent/ask.ts) |
 | **Amazon DynamoDB** | One pay-per-request table (pk/sk) for events, deliveries, expected visitors and the simulated parcel box. | [`lib/store/aws.ts`](lib/store/aws.ts), [`scripts/setup-aws.sh`](scripts/setup-aws.sh) |
 | **Amazon S3** | Private, encrypted snapshot storage. Ring privacy zones are blacked out before a frame is stored or sent to Bedrock. | [`lib/store/aws.ts`](lib/store/aws.ts), [`lib/perception/privacy.ts`](lib/perception/privacy.ts) |
-| **AWS Lambda** + **Amazon ECR** | The read-only public demo: a Next.js container (arm64, AWS Lambda Web Adapter) behind a Function URL, reserved concurrency 3. | [`Dockerfile.lambda`](Dockerfile.lambda), [`scripts/deploy-demo.sh`](scripts/deploy-demo.sh) |
+| **AWS Lambda** + **Amazon ECR** | The read-only public demo: a Next.js container (arm64, AWS Lambda Web Adapter) behind a Function URL, reserved concurrency 20. | [`Dockerfile.lambda`](Dockerfile.lambda), [`scripts/deploy-demo.sh`](scripts/deploy-demo.sh) |
 | **AWS IAM** | Least-privilege role for the demo: DynamoDB read, S3 GetObject on snapshots, InvokeModel on one Nova model. | [`docs/aws/demo-lambda-role.md`](docs/aws/demo-lambda-role.md) |
 | **Amazon Polly** | Generative-voice narration for the demo video. | (video tooling, outside the app) |
 

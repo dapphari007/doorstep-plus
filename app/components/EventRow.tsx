@@ -4,6 +4,7 @@ import { relativeTime } from '../utils/format'
 import { kindOf, titleOf } from '../utils/kinds'
 import { EventThumb } from './EventThumb'
 import { Badge } from './ui/Badge'
+import { RetryImage } from './ui/RetryImage'
 import { Spinner } from './ui/Spinner'
 
 export function EventRow({ event, now }: { event: DoorEvent; now: number }) {
@@ -46,7 +47,7 @@ function Filmstrip({ event }: { event: DoorEvent }) {
   return (
     <div className="mt-1.5 flex gap-1.5" aria-label={`${frames.length + 1} photos of this scene`}>
       {frames.map((u) => (
-        <img
+        <RetryImage
           key={u.eventId}
           src={`/api/events/${encodeURIComponent(u.eventId!)}/snapshot`}
           alt={u.view ? `${u.caption} (${u.view})` : u.caption}
