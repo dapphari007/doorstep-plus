@@ -60,7 +60,15 @@ function matchesText(e: DoorEvent, text: string) {
     .some((w) => hay.includes(w))
 }
 
-function systemPrompt() {
+/**
+ * The read-only demo replays recorded events long after they happened, so "today" there means
+ * the day of the recording: the clock is set just after the latest event.
+ */
+export function agentNow(latestEventStart: number | undefined, demo: boolean, now = Date.now()): number {
+  return demo && latestEventStart ? Math.min(now, latestEventStart + 30 * 60_000) : now
+}
+
+function systemPrompt(now: number) {
   return `You are Doorstep+'s memory. You answer a resident's questions about what happened at their front door, using only the tool results (events described from their Ring doorbell).
 
 The resident may be blind, deaf or have low vision, and answers may be read aloud:
@@ -77,11 +85,16 @@ The resident may be blind, deaf or have low vision, and answers may be read alou
 - For "did my plumber / parcel come?", call list_expected first.
 - When the resident asks for a report, incident summary, or something to send to a carrier, landlord or insurer, you MUST call build_incident_report so they get a downloadable file. Never write the report out in the chat instead; after the tool succeeds, reply in one or two sentences.
 
-Current local time: ${localTime(Date.now())} (epoch ms ${Date.now()}).`
+Current local time: ${localTime(now)} (epoch ms ${now}).${
+    config.demo
+      ? '\nThis is a read-only demo replaying events recorded on the Ring Developer Playground; treat this time as "now" and mention once that the events are from the recorded demo.'
+      : ''
+  }`
 }
 
 export async function askDoor(question: string, history: AskTurn[] = []): Promise<AskAnswer> {
   const store = getStore()
+  const now = agentNow((await store.listEvents({ limit: 1 }))[0]?.start, config.demo)
   const touched = new Set<string>()
   let report: AskAnswer['report']
 
@@ -113,7 +126,7 @@ export async function askDoor(question: string, history: AskTurn[] = []): Promis
       limit: z.number().min(1).max(50).optional(),
     }),
     callback: async (input) => {
-      const since = input.within_hours ? Date.now() - input.within_hours * 3600_000 : input.since_ms
+      const since = input.within_hours ? now - input.within_hours * 3600_000 : input.since_ms
       let events = (await store.listEvents({ since, until: input.until_ms, limit: 500 })).filter(isAnswerable)
       if (input.categories?.length)
         events = events.filter((e) => e.perception && input.categories!.includes(e.perception.category))
@@ -233,7 +246,7 @@ export async function askDoor(question: string, history: AskTurn[] = []): Promis
 
   const agent = new Agent({
     model: new BedrockModel({ region: config.aws.region, modelId: config.aws.agentModel, maxTokens: 4000 }),
-    systemPrompt: systemPrompt(),
+    systemPrompt: systemPrompt(now),
     // The read-only demo can't add expected visitors.
     tools: [searchEvents, getEvent, listDeliveries, reportTool, listExpectedTool, ...(config.demo ? [] : [expectTool])],
     printer: false,
